@@ -356,6 +356,43 @@ static NSArray *NJFilterPegasusAdModels(NSArray *models) {
 
 %end
 
+#pragma mark - 首页顶部 TopView 大卡片
+
+@interface BBHD2PhoneCategoryRecommendModel : NSObject
+
+@property (retain, nonatomic) NSArray *topBanner;
+
+@end
+
+@interface BBPhoneCategoryRecommendModel : NSObject
+
+@property (retain, nonatomic) NSArray *topBanner;
+
+@end
+
+%hook BBHD2PhoneCategoryRecommendModel
+
+- (NSArray *)topBanner {
+    return @[];
+}
+
+- (void)setTopBanner:(NSArray *)topBanner {
+    // 丢弃顶部大卡片广告数据
+}
+
+%end
+
+%hook BBPhoneCategoryRecommendModel
+
+- (NSArray *)topBanner {
+    return @[];
+}
+
+- (void)setTopBanner:(NSArray *)topBanner {
+}
+
+%end
+
 // 广告大卡片兜底：即使漏过模型过滤，也不展示（高度置 0）
 %hook BBHD2PhonePegasusAdSingleCell
 
