@@ -129,6 +129,48 @@
             return YES;
         }
     }
+
+    // 兜底：递归检查卡片的任意层级是否带广告/会员购特征
+    return [self containsAdMarker:cardData depth:0];
+}
+
+/// 递归检查对象中是否存在广告/会员购特征
+- (BOOL)containsAdMarker:(id)object depth:(NSInteger)depth {
+    if (!object || depth > 6) {
+        return NO;
+    }
+    if ([object isKindOfClass:[NSString class]]) {
+        NSString *value = (NSString *)object;
+        return [value containsString:@"mall.bilibili.com"] ||
+               [value containsString:@"bilibili://mall"] ||
+               [value containsString:@"mall/home"] ||
+               [value containsString:@"cm.bilibili.com"];
+    }
+    if ([object isKindOfClass:[NSDictionary class]]) {
+        NSDictionary *dict = (NSDictionary *)object;
+        for (id key in dict) {
+            NSString *keyName = [key isKindOfClass:[NSString class]] ? (NSString *)key : @"";
+            if ([keyName isEqualToString:@"ad_info"] ||
+                [keyName isEqualToString:@"ad_cb"] ||
+                [keyName isEqualToString:@"cm_stock"] ||
+                [keyName isEqualToString:@"cmStock"] ||
+                [keyName isEqualToString:@"ad_type"] ||
+                [keyName isEqualToString:@"is_ad"]) {
+                return YES;
+            }
+            if ([self containsAdMarker:dict[key] depth:depth + 1]) {
+                return YES;
+            }
+        }
+        return NO;
+    }
+    if ([object isKindOfClass:[NSArray class]]) {
+        for (id value in (NSArray *)object) {
+            if ([self containsAdMarker:value depth:depth + 1]) {
+                return YES;
+            }
+        }
+    }
     return NO;
 }
 

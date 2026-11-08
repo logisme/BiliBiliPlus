@@ -66,6 +66,80 @@
 
 %end
 
+#pragma mark - 首页 Pegasus 大卡片广告
+
+// 过滤 Pegasus 广告模型（会员购、广告大卡片等）
+static NSArray *NJFilterPegasusAdModels(NSArray *models) {
+    if (![models isKindOfClass:[NSArray class]]) {
+        return models;
+    }
+    NSMutableArray *filtered = [NSMutableArray arrayWithCapacity:models.count];
+    for (id model in models) {
+        NSString *className = NSStringFromClass([model class]);
+        // PegasusAdSingleModel / PegasusAdBaseModel / MPAdContainer 等均为广告卡片
+        if ([className containsString:@"PegasusAd"] ||
+            [className containsString:@"AdSingle"] ||
+            [className containsString:@"AdBaseModel"] ||
+            [className containsString:@"MPAdContainer"]) {
+            continue;
+        }
+        [filtered addObject:model];
+    }
+    return filtered;
+}
+
+// 模型解析入口：从卡片数据数组生成模型时剔除广告模型
+%hook BBHD2PhonePegasusModelBaseHelper
+
+- (NSArray *)dataArrayFromArray:(NSArray *)array {
+    NSArray *models = %orig;
+    return NJFilterPegasusAdModels(models);
+}
+
+- (NSArray *)dataArrayFromArray:(NSArray *)array modelAnalysisCallback:(id)callback {
+    NSArray *models = %orig;
+    return NJFilterPegasusAdModels(models);
+}
+
+%end
+
+// 卡片池兜底：同样剔除广告模型
+%hook BBHD2PegasusCardPool
+
++ (NSArray *)dataArrayFromArray:(NSArray *)array modelAnalysisCallback:(id)callback {
+    NSArray *models = %orig;
+    return NJFilterPegasusAdModels(models);
+}
+
+%end
+
+// 广告大卡片兜底：即使漏过模型过滤，也不展示（高度置 0）
+%hook BBHD2PhonePegasusAdSingleCell
+
+- (void)didMoveToWindow {
+    %orig;
+    ((UIView *)self).hidden = YES;
+}
+
++ (CGFloat)getHeightWithObject:(id)object argv:(id)argv {
+    return 0.0;
+}
+
+%end
+
+%hook BBHD2PhonePegasusAdSingleDislikeCell
+
+- (void)didMoveToWindow {
+    %orig;
+    ((UIView *)self).hidden = YES;
+}
+
++ (CGFloat)getHeightWithObject:(id)object argv:(id)argv {
+    return 0.0;
+}
+
+%end
+
 %end
 
 %ctor {
