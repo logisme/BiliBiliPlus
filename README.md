@@ -40,6 +40,18 @@
 
 ---
 
+## 📸 效果图
+
+| 设置界面 | 3 倍速播放 |
+| --- | --- |
+| ![设置界面](Screenshot/setting.PNG) | ![3 倍速播放](Screenshot/3x_speed.PNG) |
+
+| 首页效果 |
+| --- |
+| ![首页效果](Screenshot/combined_original_resolution.png) |
+
+---
+
 ## 🔧 相对于原开源项目的改动
 
 ### 1. 适配哔哩哔哩 9.18.0
@@ -203,6 +215,12 @@ install_name_tool -change /opt/theos/vendor/lib/libsubstrate.dylib \
 - 原项目作者：[TouchFriend](https://github.com/TouchFriend)
 
 感谢所有为 iOS 逆向生态做出贡献的开发者。如果本项目对你有帮助，欢迎 Star ⭐️ 支持。
+
+---
+
+## ⭐ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=logisme/BiliBiliPlus&type=Date)](https://star-history.com/#logisme/BiliBiliPlus&Date)
 
 ---
 
