@@ -51,7 +51,55 @@
     [datas addObject:[[NJSettingSkullViewModel alloc] initWithBizId:NJ_OFFICIAL_WEBSITE_BIZ_ID
                                                              cellId:NJ_COMMON_CELL_ID
                                                               title:@"官网"]];
+    [datas addObject:[[NJSettingSkullViewModel alloc] initWithBizId:NJ_UPSTREAM_WEBSITE_BIZ_ID
+                                                             cellId:NJ_COMMON_CELL_ID
+                                                              title:@"原开源项目"]];
+    // 按功能标题设置图标
+    for (NJSettingSkullViewModel *model in datas) {
+        model.iconName = [self iconNameForBizId:model.bizId];
+    }
     return [datas copy];
+}
+
+/// 功能对应的图标（SF Symbols）
+- (NSString *)iconNameForBizId:(NSString *)bizId {
+    if ([bizId isEqualToString:NJ_MASTER_SWITCH_BIZ_ID]) {
+        return @"power";
+    }
+    if ([bizId isEqualToString:NJ_PUBLISH_BIZ_ID]) {
+        return @"plus.circle";
+    }
+    if ([bizId isEqualToString:NJ_MALL_BIZ_ID]) {
+        return @"cart";
+    }
+    if ([bizId isEqualToString:NJ_UNUSED_SERVICE_BIZ_ID]) {
+        return @"square.grid.2x2";
+    }
+    if ([bizId isEqualToString:NJ_DEFAULT_PLAYBACK_RATE]) {
+        return @"speedometer";
+    }
+    if ([bizId isEqualToString:NJ_FOLLOW_DEFAULT_TAB]) {
+        return @"rectangle.stack";
+    }
+    if ([bizId isEqualToString:NJ_COUPON_TYPE_BIZ_ID]) {
+        return @"tag";
+    }
+    if ([bizId isEqualToString:NJ_VERTICAL_SCREEN_MODE_BIZ_ID]) {
+        return @"rectangle.portrait";
+    }
+    if ([bizId isEqualToString:NJ_SHARE_DATA_BIZ_ID]) {
+        return @"square.and.arrow.up";
+    }
+    if ([bizId isEqualToString:NJ_APP_VERSION_BIZ_ID]) {
+        return @"info.circle";
+    }
+    if ([bizId isEqualToString:NJ_OFFICIAL_WEBSITE_BIZ_ID]) {
+        return @"globe";
+    }
+    if ([bizId isEqualToString:NJ_UPSTREAM_WEBSITE_BIZ_ID]) {
+        return @"link";
+    }
+    return nil;
 }
 
 /// 默认播放速度

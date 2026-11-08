@@ -44,15 +44,21 @@
 /// - Parameter tabData: 版块数据
 - (NSDictionary *)handleItemData:(NSMutableDictionary *)tabData {
     NSString *tabId = tabData[@"tab_id"];
-    if (!tabId || ![tabId isKindOfClass:[NSString class]]) {
-        return tabData;
-    }
+    NSString *uri = [tabData[@"uri"] isKindOfClass:[NSString class]] ? tabData[@"uri"] : nil;
+    id typeValue = tabData[@"type"];
+    NSInteger type = [typeValue respondsToSelector:@selector(integerValue)] ? [typeValue integerValue] : -1;
+
     // 发布（+号）
-    if ([tabId isEqualToString:@"publish"] && !NJ_PUBLISH_VALUE) {
+    BOOL isPublish = [tabId isEqualToString:@"publish"]
+        || (uri.length > 0 && [uri containsString:@"uper/center_plus"])
+        || type == 3;
+    if (isPublish && !NJ_PUBLISH_VALUE) {
         return nil;
     }
     // 会员购
-    if ([tabId isEqualToString:@"会员购Bottom"] && !NJ_MALL_VALUE) {
+    BOOL isMall = [tabId isEqualToString:@"会员购Bottom"]
+        || (uri.length > 0 && [uri containsString:@"mall/home"]);
+    if (isMall && !NJ_MALL_VALUE) {
         return nil;
     }
     return tabData;

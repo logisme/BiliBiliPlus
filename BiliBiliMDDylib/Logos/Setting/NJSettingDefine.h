@@ -41,5 +41,7 @@
 #define NJ_APP_VERSION_BIZ_ID @"appVersion"
 // 官网
 #define NJ_OFFICIAL_WEBSITE_BIZ_ID @"officialWebsite"
+// 原开源项目
+#define NJ_UPSTREAM_WEBSITE_BIZ_ID @"upstreamWebsite"
 
 #endif /* NJSettingDefine_h */

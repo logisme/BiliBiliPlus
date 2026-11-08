@@ -66,6 +66,94 @@
 
 %end
 
+// 视频下方广告（旧版入口）：拦截广告加载，避免倒计时和广告面板
+%hook BBAdUGCContext
+
+- (void)loadUrlWithUrl:(id)url adSourceContent:(id)content isFromFloor:(BOOL)isFromFloor {
+    
+}
+
+%end
+
+// 视频下方广告（9.18 评论区宿主）：showPanelType 会展示评论区广告面板
+%hook _TtC18KmpTheseusAdaption19PlayerCommentAdHost
+
+- (void)showPanelType:(NSInteger)type url:(id)url sourceContentRaw:(id)sourceContentRaw spmid:(id)spmid fromSpmid:(id)fromSpmid {
+    
+}
+
+- (void)showRelatedMallPanelSourceContentData:(id)data {
+    
+}
+
+%end
+
+%hook _TtC15BBAdVideoDetailP33_0AEE245305D263D035ABA48978E99DA730VideoDetailAdCommentNativeHost
+
+- (void)showPanelType:(NSInteger)type url:(id)url sourceContentRaw:(id)sourceContentRaw spmid:(id)spmid fromSpmid:(id)fromSpmid {
+    
+}
+
+%end
+
+// 广告倒计时提示
+%hook _TtC15BBAdVideoDetailP33_590320696B15E8210CF79220BD0DB78317CountdownRingView
+
+- (void)didMoveToWindow {
+    %orig;
+    ((UIView *)self).hidden = YES;
+}
+
+%end
+
+// 相关视频列表（9.18 新详情页）
+@interface BBMediaDescUniteRelateVideoObject : NSObject
+
+@property (retain, nonatomic) NSArray *relateVideos;
+
+@end
+
+@interface NJMediaRelateObject : NSObject
+
+- (BOOL)cmStock;
+
+@end
+
+%hook BBMediaDescUniteRelateVideoObject
+
+- (NSArray *)relateVideos {
+    NSArray *origVideos = %orig;
+    if (origVideos.count == 0) {
+        return origVideos;
+    }
+    NSMutableArray *items = [NSMutableArray array];
+    BOOL filtered = NO;
+    for (id item in origVideos) {
+        // 广告卡片对象
+        if ([NSStringFromClass([item class]) isEqualToString:@"BBMediaUniteRelateADObject"]) {
+            filtered = YES;
+            continue;
+        }
+        // 买了推广的卡片
+        if ([item respondsToSelector:@selector(cmStock)]) {
+            BOOL cmStock = [(NJMediaRelateObject *)item cmStock];
+            if (cmStock) {
+                filtered = YES;
+                continue;
+            }
+        }
+        [items addObject:item];
+    }
+    if (!filtered) {
+        return origVideos;
+    }
+    // 保存过滤后的数据
+    [self setRelateVideos:items];
+    return items;
+}
+
+%end
+
 /****************************** 简介标签 ************************************/
 
 // 简介-UP主分享好物

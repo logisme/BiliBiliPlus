@@ -14,8 +14,10 @@
 #import "NJChangePlaybackRateTool.h"
 #import "NJSettingCache.h"
 
-// 官网地址
-#define NJ_OFFICIAL_WEBSITE_URL_STR @"https://github.com/TouchFriend/BiliBiliMApp"
+// 本项目地址
+#define NJ_OFFICIAL_WEBSITE_URL_STR @"https://github.com/logisme/BiliBiliPlus"
+// 原开源项目地址
+#define NJ_UPSTREAM_WEBSITE_URL_STR @"https://github.com/TouchFriend/BiliBiliMApp"
 
 @interface NJSettingBizHandler ()
 
@@ -72,9 +74,13 @@
         [self.shareManager shareCacheFolder];
         return;
     }
-    // 官网
-    if ([bizId isEqualToString:NJ_OFFICIAL_WEBSITE_BIZ_ID]) {
-        NSURL *url = [NSURL URLWithString:NJ_OFFICIAL_WEBSITE_URL_STR];
+    // 官网 / 原开源项目
+    if ([bizId isEqualToString:NJ_OFFICIAL_WEBSITE_BIZ_ID] ||
+        [bizId isEqualToString:NJ_UPSTREAM_WEBSITE_BIZ_ID]) {
+        NSString *urlString = [bizId isEqualToString:NJ_OFFICIAL_WEBSITE_BIZ_ID]
+            ? NJ_OFFICIAL_WEBSITE_URL_STR
+            : NJ_UPSTREAM_WEBSITE_URL_STR;
+        NSURL *url = [NSURL URLWithString:urlString];
         [[UIApplication sharedApplication] openURL:url
                                            options:@{}
                                  completionHandler:nil];

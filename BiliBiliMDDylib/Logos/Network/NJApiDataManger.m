@@ -90,6 +90,19 @@
     }
     NJApiDataItem *item = self.itemDic[urlStr];
     if (!item) {
+        // 9.18 起部分接口会走备用域名（如 app.biliapi.net），
+        // 完整 URL 不再匹配，这里按 path 兜底匹配
+        NSString *path = response.URL.path;
+        if (path.length > 0) {
+            for (NSString *key in self.itemDic) {
+                if ([[NSURL URLWithString:key].path isEqualToString:path]) {
+                    item = self.itemDic[key];
+                    break;
+                }
+            }
+        }
+    }
+    if (!item) {
         return data;
     }
     NSData *dataHandled = [item handleWithData:data

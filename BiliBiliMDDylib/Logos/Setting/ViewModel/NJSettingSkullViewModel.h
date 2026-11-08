@@ -19,6 +19,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy) NSString *title;
 /// 副标题
 @property (nonatomic, copy) NSString *subTitle;
+/// 图标（SF Symbols 名称）
+@property (nonatomic, copy) NSString *iconName;
 
 
 - (instancetype)initWithBizId:(NSString *)bizId

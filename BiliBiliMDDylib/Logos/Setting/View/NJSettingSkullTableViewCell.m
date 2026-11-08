@@ -12,13 +12,12 @@
 #import "UIImageView+BBSFreeDataWebCache.h"
 #import "View+MASAdditions.h"
 
-#define NJ_SETTING_SKULL_IMAGE @"skull.png"
-#define NJ_SETTING_SKULL_DARK_IMAGE @"skull_dark.png"
+#define NJ_SETTING_ICON_POINT_SIZE 18.0
 
 @interface NJSettingSkullTableViewCell ()
 
-/// 骷髅图标
-@property (nonatomic, strong) UIImageView *skullImageView;
+/// 功能图标
+@property (nonatomic, strong) UIImageView *iconImageView;
 /// 标题
 @property (nonatomic, strong, readwrite) UILabel *titleLabel;
 /// 副标题
@@ -63,7 +62,7 @@
     self.backgroundColor = [UIColor nj_colorWithLight:[UIColor whiteColor]
                                                  dark:[UIColor nj_colorWithHexString:@"#FF17181A"]];
 
-    [self setupSkullImageView];
+    [self setupIconImageView];
 
     [self setupTitleLabel];
     
@@ -72,12 +71,12 @@
     [self setupSeparatorView];
 }
 
-- (void)setupSkullImageView {
-    UIImageView *skullImageView = [[UIImageView alloc] init];
-    [self.contentView addSubview:skullImageView];
-    self.skullImageView = skullImageView;
-    self.skullImageView.contentMode = UIViewContentModeScaleAspectFit;
-    [skullImageView mas_makeConstraints:^(MASConstraintMaker *make) {
+- (void)setupIconImageView {
+    UIImageView *iconImageView = [[UIImageView alloc] init];
+    [self.contentView addSubview:iconImageView];
+    self.iconImageView = iconImageView;
+    self.iconImageView.contentMode = UIViewContentModeScaleAspectFit;
+    [iconImageView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.size.mas_equalTo(CGSizeMake(25.0, 25.0));
         make.left.mas_offset(15.0);
         make.centerY.mas_equalTo(self.contentView);
@@ -91,7 +90,7 @@
     self.titleLabel.textColor = [UIColor nj_colorWithLight:[UIColor nj_colorWithHexString:@"#18191c"]
                                                       dark:[UIColor nj_colorWithHexString:@"#FFE7E9EB"]];
     [self.titleLabel mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.left.mas_equalTo(self.skullImageView.mas_right).mas_offset(10.0);
+        make.left.mas_equalTo(self.iconImageView.mas_right).mas_offset(10.0);
         make.centerY.mas_equalTo(self.contentView);
     }];
 }
@@ -152,14 +151,23 @@
 
 /// 调整图片
 - (void)updateImagesForCurrentStyle {
-    if (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) {
-        NSURL *skullImageUrl = [NSURL fileURLWithPath:NJ_IMAGE_ASSET_PATH(NJ_SETTING_SKULL_DARK_IMAGE)];
-        [self.skullImageView liveSD_setImageWithURL:skullImageUrl];
-    } else {
-        NSURL *skullImageUrl = [NSURL fileURLWithPath:NJ_IMAGE_ASSET_PATH(NJ_SETTING_SKULL_IMAGE)];
-        [self.skullImageView liveSD_setImageWithURL:skullImageUrl];
+    NSString *iconName = self.viewModel.iconName;
+    if (iconName.length == 0) {
+        self.iconImageView.image = nil;
+        return;
     }
-    
+    UIImage *image = nil;
+    if (@available(iOS 13.0, *)) {
+        UIImageSymbolConfiguration *configuration =
+            [UIImageSymbolConfiguration configurationWithPointSize:NJ_SETTING_ICON_POINT_SIZE
+                                                            weight:UIImageSymbolWeightMedium];
+        image = [UIImage systemImageNamed:iconName
+                       withConfiguration:configuration];
+        image = [image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+    }
+    self.iconImageView.image = image;
+    self.iconImageView.tintColor = [UIColor nj_colorWithLight:[UIColor nj_colorWithHexString:@"#18191c"]
+                                                        dark:[UIColor nj_colorWithHexString:@"#FFE7E9EB"]];
 }
 
 
@@ -169,6 +177,7 @@
     self.viewModel = viewModel;
     self.titleLabel.text = viewModel.title;
     self.subTitleLabel.text = viewModel.subTitle;
+    [self updateImagesForCurrentStyle];
 }
 
 #pragma mark - Private Methods

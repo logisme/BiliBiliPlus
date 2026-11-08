@@ -1,4 +1,4 @@
-#line 1 "/Users/touchworld/Documents/iOSDisassembler/hook/bilibili/BiliBiliTweak/BiliBiliTweak/src/Network/NJNetworkService.xm"
+#line 1 "/Users/luoyunzhan/Bilibil_plus/src/BiliBiliMApp/BiliBiliMDDylib/Logos/Network/NJNetworkService.xm"
 
 
 #import <UIKit/UIKit.h>
@@ -37,11 +37,11 @@
 
 __asm__(".linker_option \"-framework\", \"CydiaSubstrate\"");
 
-@class BFCApiRequest; @class BFCApiOptions; @class BFCRequest; @class BFCApiModelDescription; @class BFCAccountHTTPCookie; @class BFCApiRequestOperation; 
+@class BFCAccountHTTPCookie; @class BFCRequest; @class BFCApiRequestOperation; @class BFCApiRequest; @class BFCApiOptions; @class BFCApiModelDescription; 
 
 
-#line 16 "/Users/touchworld/Documents/iOSDisassembler/hook/bilibili/BiliBiliTweak/BiliBiliTweak/src/Network/NJNetworkService.xm"
-static void (*_logos_orig$App$BFCApiRequest$requestAsync)(_LOGOS_SELF_TYPE_NORMAL BFCApiRequest* _LOGOS_SELF_CONST, SEL); static void _logos_method$App$BFCApiRequest$requestAsync(_LOGOS_SELF_TYPE_NORMAL BFCApiRequest* _LOGOS_SELF_CONST, SEL); static void (*_logos_orig$App$BFCApiRequest$requestSync)(_LOGOS_SELF_TYPE_NORMAL BFCApiRequest* _LOGOS_SELF_CONST, SEL); static void _logos_method$App$BFCApiRequest$requestSync(_LOGOS_SELF_TYPE_NORMAL BFCApiRequest* _LOGOS_SELF_CONST, SEL); static BFCApiRequestOperation* (*_logos_orig$App$BFCApiRequestOperation$init)(_LOGOS_SELF_TYPE_INIT BFCApiRequestOperation*, SEL) _LOGOS_RETURN_RETAINED; static BFCApiRequestOperation* _logos_method$App$BFCApiRequestOperation$init(_LOGOS_SELF_TYPE_INIT BFCApiRequestOperation*, SEL) _LOGOS_RETURN_RETAINED; static id (*_logos_orig$App$BFCApiRequestOperation$bfcRequest$taskType$completionHandler$)(_LOGOS_SELF_TYPE_NORMAL BFCApiRequestOperation* _LOGOS_SELF_CONST, SEL, NSURLRequest *, unsigned long long, void (^)(NSData *data, NSURLResponse *response, NSError *error, id<BFCApiMetrics> metrics)); static id _logos_method$App$BFCApiRequestOperation$bfcRequest$taskType$completionHandler$(_LOGOS_SELF_TYPE_NORMAL BFCApiRequestOperation* _LOGOS_SELF_CONST, SEL, NSURLRequest *, unsigned long long, void (^)(NSData *data, NSURLResponse *response, NSError *error, id<BFCApiMetrics> metrics)); static BFCRequest* (*_logos_orig$App$BFCRequest$initWithRequest$taskType$priority$progressHandler$metricsHandler$completionHandler$)(_LOGOS_SELF_TYPE_INIT BFCRequest*, SEL, NSURLRequest *, unsigned long long, long long, void (^)(long long param1, long long param2, long long param3), void (^)(id<BFCApiMetrics> metrics), void (^)(NSData *data, NSURLResponse *response, NSError *error)) _LOGOS_RETURN_RETAINED; static BFCRequest* _logos_method$App$BFCRequest$initWithRequest$taskType$priority$progressHandler$metricsHandler$completionHandler$(_LOGOS_SELF_TYPE_INIT BFCRequest*, SEL, NSURLRequest *, unsigned long long, long long, void (^)(long long param1, long long param2, long long param3), void (^)(id<BFCApiMetrics> metrics), void (^)(NSData *data, NSURLResponse *response, NSError *error)) _LOGOS_RETURN_RETAINED; static NSString * (*_logos_orig$App$BFCApiOptions$description)(_LOGOS_SELF_TYPE_NORMAL BFCApiOptions* _LOGOS_SELF_CONST, SEL); static NSString * _logos_method$App$BFCApiOptions$description(_LOGOS_SELF_TYPE_NORMAL BFCApiOptions* _LOGOS_SELF_CONST, SEL); static NSString * (*_logos_orig$App$BFCAccountHTTPCookie$description)(_LOGOS_SELF_TYPE_NORMAL BFCAccountHTTPCookie* _LOGOS_SELF_CONST, SEL); static NSString * _logos_method$App$BFCAccountHTTPCookie$description(_LOGOS_SELF_TYPE_NORMAL BFCAccountHTTPCookie* _LOGOS_SELF_CONST, SEL); static NSString * (*_logos_orig$App$BFCApiModelDescription$description)(_LOGOS_SELF_TYPE_NORMAL BFCApiModelDescription* _LOGOS_SELF_CONST, SEL); static NSString * _logos_method$App$BFCApiModelDescription$description(_LOGOS_SELF_TYPE_NORMAL BFCApiModelDescription* _LOGOS_SELF_CONST, SEL); 
+#line 16 "/Users/luoyunzhan/Bilibil_plus/src/BiliBiliMApp/BiliBiliMDDylib/Logos/Network/NJNetworkService.xm"
+static void (*_logos_orig$App$BFCApiRequest$requestAsync)(_LOGOS_SELF_TYPE_NORMAL BFCApiRequest* _LOGOS_SELF_CONST, SEL); static void _logos_method$App$BFCApiRequest$requestAsync(_LOGOS_SELF_TYPE_NORMAL BFCApiRequest* _LOGOS_SELF_CONST, SEL); static void (*_logos_orig$App$BFCApiRequest$requestSync)(_LOGOS_SELF_TYPE_NORMAL BFCApiRequest* _LOGOS_SELF_CONST, SEL); static void _logos_method$App$BFCApiRequest$requestSync(_LOGOS_SELF_TYPE_NORMAL BFCApiRequest* _LOGOS_SELF_CONST, SEL); static BFCApiRequestOperation* (*_logos_orig$App$BFCApiRequestOperation$init)(_LOGOS_SELF_TYPE_INIT BFCApiRequestOperation*, SEL) _LOGOS_RETURN_RETAINED; static BFCApiRequestOperation* _logos_method$App$BFCApiRequestOperation$init(_LOGOS_SELF_TYPE_INIT BFCApiRequestOperation*, SEL) _LOGOS_RETURN_RETAINED; static id (*_logos_orig$App$BFCApiRequestOperation$bfcRequest$taskType$completionHandler$)(_LOGOS_SELF_TYPE_NORMAL BFCApiRequestOperation* _LOGOS_SELF_CONST, SEL, NSURLRequest *, unsigned long long, void (^)(NSData *data, NSURLResponse *response, NSError *error, id<BFCApiMetrics> metrics)); static id _logos_method$App$BFCApiRequestOperation$bfcRequest$taskType$completionHandler$(_LOGOS_SELF_TYPE_NORMAL BFCApiRequestOperation* _LOGOS_SELF_CONST, SEL, NSURLRequest *, unsigned long long, void (^)(NSData *data, NSURLResponse *response, NSError *error, id<BFCApiMetrics> metrics)); static void (*_logos_orig$App$BFCRequest$handleFinishCallbackWithData$response$error$)(_LOGOS_SELF_TYPE_NORMAL BFCRequest* _LOGOS_SELF_CONST, SEL, NSData *, NSURLResponse *, NSError *); static void _logos_method$App$BFCRequest$handleFinishCallbackWithData$response$error$(_LOGOS_SELF_TYPE_NORMAL BFCRequest* _LOGOS_SELF_CONST, SEL, NSData *, NSURLResponse *, NSError *); static NSString * (*_logos_orig$App$BFCApiOptions$description)(_LOGOS_SELF_TYPE_NORMAL BFCApiOptions* _LOGOS_SELF_CONST, SEL); static NSString * _logos_method$App$BFCApiOptions$description(_LOGOS_SELF_TYPE_NORMAL BFCApiOptions* _LOGOS_SELF_CONST, SEL); static NSString * (*_logos_orig$App$BFCAccountHTTPCookie$description)(_LOGOS_SELF_TYPE_NORMAL BFCAccountHTTPCookie* _LOGOS_SELF_CONST, SEL); static NSString * _logos_method$App$BFCAccountHTTPCookie$description(_LOGOS_SELF_TYPE_NORMAL BFCAccountHTTPCookie* _LOGOS_SELF_CONST, SEL); static NSString * (*_logos_orig$App$BFCApiModelDescription$description)(_LOGOS_SELF_TYPE_NORMAL BFCApiModelDescription* _LOGOS_SELF_CONST, SEL); static NSString * _logos_method$App$BFCApiModelDescription$description(_LOGOS_SELF_TYPE_NORMAL BFCApiModelDescription* _LOGOS_SELF_CONST, SEL); 
 
 
 
@@ -80,39 +80,11 @@ static id _logos_method$App$BFCApiRequestOperation$bfcRequest$taskType$completio
 
 
 
-static BFCRequest* _logos_method$App$BFCRequest$initWithRequest$taskType$priority$progressHandler$metricsHandler$completionHandler$(_LOGOS_SELF_TYPE_INIT BFCRequest* __unused self, SEL __unused _cmd, NSURLRequest * request, unsigned long long type, long long priority, void (^progressHandler)(long long param1, long long param2, long long param3), void (^metricsHandler)(id<BFCApiMetrics> metrics), void (^completionHandler)(NSData *data, NSURLResponse *response, NSError *error)) _LOGOS_RETURN_RETAINED {
-        void (^hookCompletionHandler)(NSData *, NSURLResponse *, NSError *) = ^(NSData *data, NSURLResponse *response, NSError *error) {
-            
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            if (completionHandler) {
-                data = [[NJApiDataManger sharedInstance] handleWithData:data
-                                                               response:response
-                                                                  error:error];
-                completionHandler(data,
-                                  response,
-                                  error);
-            }
-        };
-
-
-
-
-
-        return _logos_orig$App$BFCRequest$initWithRequest$taskType$priority$progressHandler$metricsHandler$completionHandler$(self, _cmd, request, type, priority, progressHandler, metricsHandler, hookCompletionHandler);
-        
+static void _logos_method$App$BFCRequest$handleFinishCallbackWithData$response$error$(_LOGOS_SELF_TYPE_NORMAL BFCRequest* _LOGOS_SELF_CONST __unused self, SEL __unused _cmd, NSData * data, NSURLResponse * response, NSError * error) {
+    data = [[NJApiDataManger sharedInstance] handleWithData:data
+                                                   response:response
+                                                      error:error];
+    _logos_orig$App$BFCRequest$handleFinishCallbackWithData$response$error$(self, _cmd, data, response, error);
 }
 
 
@@ -173,8 +145,8 @@ static NSString * _logos_method$App$BFCApiModelDescription$description(_LOGOS_SE
 
 
 
-static __attribute__((constructor)) void _logosLocalCtor_27b85f3b(int __unused argc, char __unused **argv, char __unused **envp) {
+static __attribute__((constructor)) void _logosLocalCtor_67067424(int __unused argc, char __unused **argv, char __unused **envp) {
     if (NJ_MASTER_SWITCH_VALUE) {
-        {Class _logos_class$App$BFCApiRequest = objc_getClass("BFCApiRequest"); { MSHookMessageEx(_logos_class$App$BFCApiRequest, @selector(requestAsync), (IMP)&_logos_method$App$BFCApiRequest$requestAsync, (IMP*)&_logos_orig$App$BFCApiRequest$requestAsync);}{ MSHookMessageEx(_logos_class$App$BFCApiRequest, @selector(requestSync), (IMP)&_logos_method$App$BFCApiRequest$requestSync, (IMP*)&_logos_orig$App$BFCApiRequest$requestSync);}Class _logos_class$App$BFCApiRequestOperation = objc_getClass("BFCApiRequestOperation"); { MSHookMessageEx(_logos_class$App$BFCApiRequestOperation, @selector(init), (IMP)&_logos_method$App$BFCApiRequestOperation$init, (IMP*)&_logos_orig$App$BFCApiRequestOperation$init);}{ MSHookMessageEx(_logos_class$App$BFCApiRequestOperation, @selector(bfcRequest:taskType:completionHandler:), (IMP)&_logos_method$App$BFCApiRequestOperation$bfcRequest$taskType$completionHandler$, (IMP*)&_logos_orig$App$BFCApiRequestOperation$bfcRequest$taskType$completionHandler$);}Class _logos_class$App$BFCRequest = objc_getClass("BFCRequest"); { MSHookMessageEx(_logos_class$App$BFCRequest, @selector(initWithRequest:taskType:priority:progressHandler:metricsHandler:completionHandler:), (IMP)&_logos_method$App$BFCRequest$initWithRequest$taskType$priority$progressHandler$metricsHandler$completionHandler$, (IMP*)&_logos_orig$App$BFCRequest$initWithRequest$taskType$priority$progressHandler$metricsHandler$completionHandler$);}Class _logos_class$App$BFCApiOptions = objc_getClass("BFCApiOptions"); { MSHookMessageEx(_logos_class$App$BFCApiOptions, @selector(description), (IMP)&_logos_method$App$BFCApiOptions$description, (IMP*)&_logos_orig$App$BFCApiOptions$description);}Class _logos_class$App$BFCAccountHTTPCookie = objc_getClass("BFCAccountHTTPCookie"); { MSHookMessageEx(_logos_class$App$BFCAccountHTTPCookie, @selector(description), (IMP)&_logos_method$App$BFCAccountHTTPCookie$description, (IMP*)&_logos_orig$App$BFCAccountHTTPCookie$description);}Class _logos_class$App$BFCApiModelDescription = objc_getClass("BFCApiModelDescription"); { MSHookMessageEx(_logos_class$App$BFCApiModelDescription, @selector(description), (IMP)&_logos_method$App$BFCApiModelDescription$description, (IMP*)&_logos_orig$App$BFCApiModelDescription$description);}}
+        {Class _logos_class$App$BFCApiRequest = objc_getClass("BFCApiRequest"); { MSHookMessageEx(_logos_class$App$BFCApiRequest, @selector(requestAsync), (IMP)&_logos_method$App$BFCApiRequest$requestAsync, (IMP*)&_logos_orig$App$BFCApiRequest$requestAsync);}{ MSHookMessageEx(_logos_class$App$BFCApiRequest, @selector(requestSync), (IMP)&_logos_method$App$BFCApiRequest$requestSync, (IMP*)&_logos_orig$App$BFCApiRequest$requestSync);}Class _logos_class$App$BFCApiRequestOperation = objc_getClass("BFCApiRequestOperation"); { MSHookMessageEx(_logos_class$App$BFCApiRequestOperation, @selector(init), (IMP)&_logos_method$App$BFCApiRequestOperation$init, (IMP*)&_logos_orig$App$BFCApiRequestOperation$init);}{ MSHookMessageEx(_logos_class$App$BFCApiRequestOperation, @selector(bfcRequest:taskType:completionHandler:), (IMP)&_logos_method$App$BFCApiRequestOperation$bfcRequest$taskType$completionHandler$, (IMP*)&_logos_orig$App$BFCApiRequestOperation$bfcRequest$taskType$completionHandler$);}Class _logos_class$App$BFCRequest = objc_getClass("BFCRequest"); { MSHookMessageEx(_logos_class$App$BFCRequest, @selector(handleFinishCallbackWithData:response:error:), (IMP)&_logos_method$App$BFCRequest$handleFinishCallbackWithData$response$error$, (IMP*)&_logos_orig$App$BFCRequest$handleFinishCallbackWithData$response$error$);}Class _logos_class$App$BFCApiOptions = objc_getClass("BFCApiOptions"); { MSHookMessageEx(_logos_class$App$BFCApiOptions, @selector(description), (IMP)&_logos_method$App$BFCApiOptions$description, (IMP*)&_logos_orig$App$BFCApiOptions$description);}Class _logos_class$App$BFCAccountHTTPCookie = objc_getClass("BFCAccountHTTPCookie"); { MSHookMessageEx(_logos_class$App$BFCAccountHTTPCookie, @selector(description), (IMP)&_logos_method$App$BFCAccountHTTPCookie$description, (IMP*)&_logos_orig$App$BFCAccountHTTPCookie$description);}Class _logos_class$App$BFCApiModelDescription = objc_getClass("BFCApiModelDescription"); { MSHookMessageEx(_logos_class$App$BFCApiModelDescription, @selector(description), (IMP)&_logos_method$App$BFCApiModelDescription$description, (IMP*)&_logos_orig$App$BFCApiModelDescription$description);}}
     }
 }

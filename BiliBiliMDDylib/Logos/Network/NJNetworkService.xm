@@ -47,44 +47,16 @@
 
 %hook BFCRequest
 
-- (id)initWithRequest:(NSURLRequest *)request
-             taskType:(unsigned long long)type
-             priority:(long long)priority
-      progressHandler:(void (^)(long long param1, long long param2, long long param3))progressHandler
-       metricsHandler:(void (^)(id<BFCApiMetrics> metrics))metricsHandler
-    completionHandler:(void (^)(NSData *data, NSURLResponse *response, NSError *error))completionHandler {
-        void (^hookCompletionHandler)(NSData *, NSURLResponse *, NSError *) = ^(NSData *data, NSURLResponse *response, NSError *error) {
-            /*
-            if (data) {
-                NSString *urlStr = response.URL.nj_fullPath;
-                id jsonObject = [NSJSONSerialization JSONObjectWithData:data
-                                                               options:NSJSONReadingMutableContainers
-                                                                 error:nil];
-                NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonObject
-                                                                 options:NSJSONWritingPrettyPrinted
-                                                                   error:nil];
-
-                NSString *jsonString = [[NSString alloc] initWithData:jsonData
-                                                              encoding:NSUTF8StringEncoding];
-                NSLog(@"%@:url:%@ \n%@", nj_logPrefix, urlStr, jsonString);
-            }
-             */
-            if (completionHandler) {
-                data = [[NJApiDataManger sharedInstance] handleWithData:data
-                                                               response:response
-                                                                  error:error];
-                completionHandler(data,
-                                  response,
-                                  error);
-            }
-        };
-        return %orig(request,
-                     type,
-                     priority,
-                     progressHandler,
-                     metricsHandler,
-                     hookCompletionHandler);
-        
+// 9.18 起 BFCRequest 的初始化方法去掉了 priority 参数，改为统一在
+// handleFinishCallbackWithData:response:error: 中拦截响应数据，
+// 这样可以保证所有通过 BFCRequest 发出的请求都能被过滤。
+- (void)handleFinishCallbackWithData:(NSData *)data
+                            response:(NSURLResponse *)response
+                               error:(NSError *)error {
+    data = [[NJApiDataManger sharedInstance] handleWithData:data
+                                                   response:response
+                                                      error:error];
+    %orig(data, response, error);
 }
 
 %end

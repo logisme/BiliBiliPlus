@@ -72,6 +72,18 @@
     if (cardType.length == 0) {
         return cardData;
     }
+    // 9.18 起新增 cm_single_v1、cm_single_v7、cm_single_v9 等广告卡片，
+    // 所有以 cm_ 开头的卡片类型都属于商业推广卡片，直接过滤
+    if ([cardType hasPrefix:@"cm_"]) {
+        return nil;
+    }
+    // 横幅类卡片（含 9.18 新增 banner_v3）统一不展示
+    if ([cardType hasPrefix:@"banner"]) {
+        return nil;
+    }
+    if ([self isAdCard:cardData]) {
+        return nil;
+    }
     NJRcmdCardEntry *cardEntry = self.cardEntryDic[cardType];
     if (!cardEntry) {
         return cardData;
@@ -81,6 +93,44 @@
 }
 
 #pragma mark - Private Methods
+
+/// 判断卡片是否属于广告/会员购推广
+- (BOOL)isAdCard:(NSDictionary *)cardData {
+    // 带广告信息的卡片
+    if (cardData[@"ad_info"]) {
+        return YES;
+    }
+
+    NSString *cardType = cardData[@"card_type"];
+    NSString *cardGoto = cardData[@"card_goto"];
+    NSString *gotoType = cardData[@"goto"];
+    NSString *uri = cardData[@"uri"];
+
+    // 卡片类型/跳转类型为会员购
+    if ([cardType containsString:@"mall"] ||
+        [cardGoto containsString:@"mall"] ||
+        [gotoType isEqualToString:@"ad"] ||
+        [gotoType isEqualToString:@"mall"] ||
+        [cardGoto isEqualToString:@"ad"]) {
+        return YES;
+    }
+
+    // 广告回调字段（args.ad_cb）只出现在商业推广卡片中
+    id args = cardData[@"args"];
+    if ([args isKindOfClass:[NSDictionary class]] && args[@"ad_cb"]) {
+        return YES;
+    }
+
+    // 会员购落地页
+    if ([uri isKindOfClass:[NSString class]] && uri.length > 0) {
+        if ([uri containsString:@"mall.bilibili.com"] ||
+            [uri containsString:@"bilibili://mall"] ||
+            [uri containsString:@"mall/home"]) {
+            return YES;
+        }
+    }
+    return NO;
+}
 
 #pragma mark - Property Methods
 
