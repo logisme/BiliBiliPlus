@@ -45,6 +45,18 @@ NS_ASSUME_NONNULL_BEGIN
 /// 保存关注的默认版块
 - (void)saveFollowDefaultTab:(NSString *)tab;
 
+/// 「我的」页面可选择的全部服务（由接口数据自动收集，元素为 @{@"id":..., @"title":...}）
+- (NSArray<NSDictionary *> *)mineServices;
+
+/// 保存「我的」页面可选择的服务
+- (void)saveMineServices:(NSArray<NSDictionary *> *)services;
+
+/// 「我的」页面用户勾选显示的服务 id
+- (NSSet<NSString *> *)selectedMineServiceIds;
+
+/// 保存「我的」页面用户勾选显示的服务 id
+- (void)saveSelectedMineServiceIds:(NSSet<NSString *> *)ids;
+
 @end
 
 NS_ASSUME_NONNULL_END

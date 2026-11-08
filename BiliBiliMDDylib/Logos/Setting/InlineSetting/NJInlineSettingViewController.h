@@ -15,6 +15,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) NSArray<NJInlineSettingModel *> *dataSource;
 /// 选中闭包
 @property (nonatomic, copy) void (^selectedHandler)(NJInlineSettingModel *model);
+/// 是否允许多选（默认 NO）
+@property (nonatomic, assign) BOOL allowsMultipleSelection;
+/// 多选变化闭包（返回当前所有选中项）
+@property (nonatomic, copy) void (^multiSelectedHandler)(NSArray<NJInlineSettingModel *> *selectedModels);
 
 
 - (instancetype)initWithStyle:(UITableViewStyle)style

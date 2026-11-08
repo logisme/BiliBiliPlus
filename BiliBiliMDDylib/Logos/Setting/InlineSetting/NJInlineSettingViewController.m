@@ -71,6 +71,25 @@ static NSString * const kInlineSettingCellID = @"BBMFInlineSettingCell";
 - (void)tableView:(UITableView *)tableView
 didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 
+    NJInlineSettingModel *current = self.dataSource[indexPath.row];
+
+    if (self.allowsMultipleSelection) {
+        // 多选：切换当前项
+        current.selected = !current.selected;
+        [tableView reloadData];
+
+        NSMutableArray<NJInlineSettingModel *> *selectedModels = [NSMutableArray array];
+        for (NJInlineSettingModel *model in self.dataSource) {
+            if (model.selected) {
+                [selectedModels addObject:model];
+            }
+        }
+        if (self.multiSelectedHandler) {
+            self.multiSelectedHandler([selectedModels copy]);
+        }
+        return;
+    }
+
     // 单选逻辑（InlineSetting 常见）
     for (NSInteger i = 0; i < self.dataSource.count; i++) {
         NJInlineSettingModel *model = self.dataSource[i];
@@ -79,9 +98,6 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 
     [tableView reloadData];
 
-    NJInlineSettingModel *current = self.dataSource[indexPath.row];
-
-    // 🔥 这里是你真正关心的点（埋 hook / 通知 / 偏好）
     [self handleBizSelection:current];
 }
 

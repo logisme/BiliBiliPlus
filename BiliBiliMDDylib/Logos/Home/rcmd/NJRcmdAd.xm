@@ -140,6 +140,28 @@ static NSArray *NJFilterPegasusAdModels(NSArray *models) {
 
 %end
 
+#pragma mark - 我的页面大积分
+
+@interface BBPhoneMineInfoArea : UIView
+@end
+
+// 在「我的」页面的硬币 Label 旁边显示大积分数额
+%hook BBPhoneMineInfoArea
+
+- (void)configCoinLabel:(id)label {
+    %orig;
+    id coinLabel = nil;
+    @try {
+        coinLabel = [self valueForKey:@"coinLbl"];
+    } @catch (__unused NSException *exception) {
+    }
+    if ([coinLabel isKindOfClass:[UILabel class]]) {
+        [NJApiRequest applyBigPointToCoinLabel:(UILabel *)coinLabel];
+    }
+}
+
+%end
+
 %end
 
 %ctor {

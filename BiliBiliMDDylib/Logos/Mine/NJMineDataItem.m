@@ -49,9 +49,9 @@
                                                      error:&error];
     if ([jsonObject isKindOfClass:[NSMutableDictionary class]]) {
         NSMutableDictionary *allDataDic = (NSMutableDictionary *)jsonObject;
-        if ([allDataDic[@"data"][@"sections_v2"] isKindOfClass:[NSMutableArray class]] &&
-            !NJ_UNUSED_SERVICE_VALUE) {
+        if ([allDataDic[@"data"][@"sections_v2"] isKindOfClass:[NSMutableArray class]]) {
             NSMutableArray *dataArr = allDataDic[@"data"][@"sections_v2"];
+            // 始终按用户勾选的服务列表过滤（默认不勾选 = 全部隐藏非核心服务）
             NSArray *dataHandled = [self.dataHandler handleData:dataArr];
             [dataArr removeAllObjects];
             [dataArr addObjectsFromArray:dataHandled];

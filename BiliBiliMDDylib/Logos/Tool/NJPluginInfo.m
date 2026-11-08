@@ -16,7 +16,7 @@
 
 /// 插件版本
 + (NSString *)pluginVersion {
-    return @"2.7.1";
+    return @"2.8.0";
 }
 
 /// App版本

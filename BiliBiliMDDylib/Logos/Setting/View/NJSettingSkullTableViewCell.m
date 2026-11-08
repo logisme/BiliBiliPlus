@@ -177,6 +177,8 @@
     self.viewModel = viewModel;
     self.titleLabel.text = viewModel.title;
     self.subTitleLabel.text = viewModel.subTitle;
+    self.subTitleLabel.textColor = viewModel.subTitleColor ?: [UIColor nj_colorWithLight:[UIColor nj_colorWithHexString:@"#9499a0"]
+                                                                               dark:[UIColor nj_colorWithHexString:@"#757a81"]];
     [self updateImagesForCurrentStyle];
 }
 

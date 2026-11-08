@@ -22,6 +22,29 @@
 #define NJ_RECEIVE_DAILY_EXPERIENCE_KEY @"NJ_RECEIVE_DAILY_EXPERIENCE_KEY"
 // 获取大会员卡券列表
 #define NJ_LOAD_MY_PRIVILEGE_KEY @"NJ_LOAD_MY_PRIVILEGE_KEY"
+// 大积分签到
+#define NJ_BIG_POINT_SIGN_KEY @"NJ_BIG_POINT_SIGN_KEY"
+
+/// 缓存的大积分数额（-1 表示未知）
+static NSInteger NJBigPointCachedValue = -1;
+/// 展示大积分的硬币 Label（弱引用）
+static __weak UILabel *NJBigPointCoinLabel = nil;
+/// 硬币 Label 原始文本
+static NSString *NJBigPointCoinBaseText = nil;
+
+/// 刷新硬币 Label（追加大积分数额）
+static void NJRefreshBigPointCoinLabel(void) {
+    UILabel *label = NJBigPointCoinLabel;
+    if (!label) {
+        return;
+    }
+    NSString *baseText = NJBigPointCoinBaseText ?: @"";
+    if (NJBigPointCachedValue >= 0) {
+        label.text = [NSString stringWithFormat:@"%@ · 大积分%ld", baseText, (long)NJBigPointCachedValue];
+    } else {
+        label.text = baseText;
+    }
+}
 
 @implementation NJApiRequest
 
@@ -34,6 +57,15 @@
     
     // 领取手动选择的大会员福利
     [self couponAutoReceiver];
+
+    // 会员中心大积分自动签到（每天一次）
+    if ([[NJDailyTaskManager shared] canRunTask:NJ_BIG_POINT_SIGN_KEY]) {
+        [self signBigPointWithCompletionHandler:^(BOOL success, NSString *message) {
+            if (success) {
+                [[NJDailyTaskManager shared] markTaskDone:NJ_BIG_POINT_SIGN_KEY];
+            }
+        }];
+    }
     
     // 领取每日视频分享经验
     if ([[NJDailyTaskManager shared] canRunTask:NJ_RECEIVE_SHARE_EXPERIENCE_KEY]) {
@@ -233,4 +265,113 @@
     [request requestAsync];
 }
     
+/// 从 BFCApiRequest 回调字典中取出业务 data
+static NSDictionary *NJDataFromResponseDict(NSDictionary *dict) {
+    if (![dict isKindOfClass:[NSDictionary class]]) {
+        return nil;
+    }
+    id root = dict[@"/"];
+    if ([root isKindOfClass:NSClassFromString(@"NJResponseModel")]) {
+        return ((NJResponseModel *)root).data;
+    }
+    if ([root isKindOfClass:[NSDictionary class]]) {
+        return root;
+    }
+    if ([dict[@"data"] isKindOfClass:[NSDictionary class]]) {
+        return dict[@"data"];
+    }
+    return dict;
+}
+
+#pragma mark - 大积分
+
+/// 加载大积分信息
++ (void)loadBigPointInfoWithCompletionHandler:(void (^ _Nullable)(NSInteger point, BOOL isSigned, NSInteger signCount))completionHandler
+                                 errorHandler:(void (^ _Nullable)(NSError *error))errorHandler {
+    BFCApiOptions *options = [NSClassFromString(@"BFCApiOptions") optionsWithBaseUrl:@"https://api.bilibili.com/x/vip/web/vip_center/v2"];
+    options.params = @{};
+    BFCApiModelDescription *response_Des = [NSClassFromString(@"BFCApiModelDescription") modelWith:@"/" mappingClass:NSClassFromString(@"NJResponseModel") isArray:NO isOptional:YES];
+    options.modelDescriptions = @[response_Des];
+    BFCApiRequest *request = [(BFCApiRequest *)[NSClassFromString(@"BFCApiRequest") alloc] initWithOptions:options];
+    request.completionHandler = ^(NSDictionary *dict) {
+        NSDictionary *data = NJDataFromResponseDict(dict);
+        NSDictionary *bigPoint = [data[@"big_point"] isKindOfClass:[NSDictionary class]] ? data[@"big_point"] : nil;
+        NSNumber *pointValue = [bigPoint[@"point"] isKindOfClass:[NSNumber class]] ? bigPoint[@"point"] : nil;
+        NSDictionary *signInfo = [data[@"three_day_sign"] isKindOfClass:[NSDictionary class]] ? data[@"three_day_sign"] : nil;
+        BOOL signedToday = [signInfo[@"signed"] boolValue];
+        NSInteger signCount = [signInfo[@"count"] integerValue];
+        if (pointValue) {
+            NJBigPointCachedValue = pointValue.integerValue;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NJRefreshBigPointCoinLabel();
+            });
+        }
+        if (completionHandler) {
+            completionHandler(pointValue ? pointValue.integerValue : -1, signedToday, signCount);
+        }
+    };
+    request.errorHandler = ^(NSError *error, NSDictionary *dict) {
+        if (errorHandler) {
+            errorHandler(error);
+        }
+    };
+    [request requestAsync];
+}
+
+/// 会员中心大积分签到
++ (void)signBigPointWithCompletionHandler:(void (^ _Nullable)(BOOL success, NSString *message))completionHandler {
+    BFCApiOptions *options = [NSClassFromString(@"BFCApiOptions") optionsWithBaseUrl:@"https://api.bilibili.com/pgc/activity/score/task/sign2"];
+    options.requestMethod = 1;
+    NSNumber *timestamp = @((long long)([[NSDate date] timeIntervalSince1970] * 1000));
+    options.params = @{@"t": [timestamp stringValue]};
+    options.extraHTTPHeader = @{@"Content-Type": @"application/json"};
+    BFCApiModelDescription *response_Des = [NSClassFromString(@"BFCApiModelDescription") modelWith:@"/" mappingClass:NSClassFromString(@"NJResponseModel") isArray:NO isOptional:YES];
+    options.modelDescriptions = @[response_Des];
+    BFCApiRequest *request = [(BFCApiRequest *)[NSClassFromString(@"BFCApiRequest") alloc] initWithOptions:options];
+    request.requestInjection = ^NSURLRequest *(NSURLRequest *req) {
+        NSMutableURLRequest *mutableRequest = [req mutableCopy];
+        [mutableRequest setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+        NSData *body = [NSJSONSerialization dataWithJSONObject:@{@"t": timestamp} options:0 error:nil];
+        [mutableRequest setHTTPBody:body];
+        return mutableRequest;
+    };
+    request.completionHandler = ^(NSDictionary *dict) {
+        NSDictionary *data = NJDataFromResponseDict(dict);
+        NSNumber *count = [data[@"count"] isKindOfClass:[NSNumber class]] ? data[@"count"] : nil;
+        NSString *message = count ? [NSString stringWithFormat:@"签到成功，连续签到 %@ 天", count] : @"签到成功";
+        if (completionHandler) {
+            completionHandler(YES, message);
+        }
+        // 签到后刷新大积分数额
+        [self loadBigPointInfoWithCompletionHandler:nil errorHandler:nil];
+    };
+    request.errorHandler = ^(NSError *error, NSDictionary *dict) {
+        NSString *message = dict[@"message"];
+        if (message.length == 0) {
+            message = error.localizedDescription ?: @"签到失败，请稍后重试";
+        }
+        if (completionHandler) {
+            completionHandler(NO, message);
+        }
+    };
+    [request requestAsync];
+}
+
+/// 把大积分数额显示到「我的」页面的硬币 Label 旁边
++ (void)applyBigPointToCoinLabel:(UILabel *)coinLabel {
+    if (![coinLabel isKindOfClass:[UILabel class]]) {
+        return;
+    }
+    NJBigPointCoinLabel = coinLabel;
+    NSString *text = coinLabel.text ?: @"";
+    NSRange range = [text rangeOfString:@" · 大积分"];
+    NJBigPointCoinBaseText = range.location != NSNotFound ? [text substringToIndex:range.location] : text;
+    NJRefreshBigPointCoinLabel();
+    // 首次展示时拉取大积分信息
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        [self loadBigPointInfoWithCompletionHandler:nil errorHandler:nil];
+    });
+}
+
 @end

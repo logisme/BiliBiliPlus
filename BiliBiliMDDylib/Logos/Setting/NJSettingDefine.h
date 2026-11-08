@@ -27,6 +27,14 @@
 #define NJ_MALL_BIZ_ID @"mall"
 // 我的-不常用服务
 #define NJ_UNUSED_SERVICE_BIZ_ID @"my_unusedService"
+// 我的-显示的服务（多选）
+#define NJ_MINE_SERVICES_BIZ_ID @"my_mineServices"
+// 检查更新
+#define NJ_CHECK_UPDATE_BIZ_ID @"checkUpdate"
+// 大积分签到
+#define NJ_BIG_POINT_SIGN_BIZ_ID @"bigPointSign"
+// 大积分中心
+#define NJ_BIG_POINT_CENTER_BIZ_ID @"bigPointCenter"
 // 默认播放速度
 #define NJ_DEFAULT_PLAYBACK_RATE @"defaultPlaybackRate"
 // 关注的默认版块

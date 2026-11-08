@@ -13,11 +13,17 @@
 #import "NJInlineSettingViewController.h"
 #import "NJChangePlaybackRateTool.h"
 #import "NJSettingCache.h"
+#import "NJPluginInfo.h"
+#import "NJApiRequest.h"
 
 // 本项目地址
 #define NJ_OFFICIAL_WEBSITE_URL_STR @"https://github.com/logisme/BiliBiliPlus"
-// 原开源项目地址
-#define NJ_UPSTREAM_WEBSITE_URL_STR @"https://github.com/TouchFriend/BiliBiliMApp"
+// 项目地址（原开源项目入口）
+#define NJ_UPSTREAM_WEBSITE_URL_STR @"https://github.com/logisme/BiliBiliPlus"
+/// 大积分中心
+#define NJ_BIG_POINT_CENTER_URL_STR @"https://big.bilibili.com/mobile/bigPoint?closable=1&msource=0"
+/// GitHub Releases API
+#define NJ_RELEASES_LATEST_URL_STR @"https://api.github.com/repos/logisme/BiliBiliPlus/releases/latest"
 
 @interface NJSettingBizHandler ()
 
@@ -99,6 +105,29 @@
     // 大会员福利领取类型
     if ([bizId isEqualToString:NJ_COUPON_TYPE_BIZ_ID]) {
         [self handleCouponTypeWithViewModel:viewModel];
+        return;
+    }
+    // 「我的」页面显示的服务
+    if ([bizId isEqualToString:NJ_MINE_SERVICES_BIZ_ID]) {
+        [self handleMineServicesWithViewModel:viewModel];
+        return;
+    }
+    // 检查更新
+    if ([bizId isEqualToString:NJ_CHECK_UPDATE_BIZ_ID]) {
+        [self handleCheckUpdate];
+        return;
+    }
+    // 大积分签到
+    if ([bizId isEqualToString:NJ_BIG_POINT_SIGN_BIZ_ID]) {
+        [self handleBigPointSignWithViewModel:viewModel];
+        return;
+    }
+    // 大积分中心
+    if ([bizId isEqualToString:NJ_BIG_POINT_CENTER_BIZ_ID]) {
+        NSURL *url = [NSURL URLWithString:NJ_BIG_POINT_CENTER_URL_STR];
+        [[UIApplication sharedApplication] openURL:url
+                                           options:@{}
+                                 completionHandler:nil];
         return;
     }
 }
@@ -188,6 +217,130 @@
     viewModel.subTitle = model.title;
     [self rebootTip];
     [self.tableView reloadData];
+}
+
+#pragma mark 「我的」页面显示的服务
+
+- (void)handleMineServicesWithViewModel:(NJSettingSkullViewModel *)viewModel {
+    NSArray<NSDictionary *> *services = [[NJSettingCache sharedInstance] mineServices];
+    if (services.count == 0) {
+        [self showAlertWithTitle:@"暂无可选服务"
+                         message:@"请先进入「我的」页面刷新一次数据后再试"];
+        return;
+    }
+    NSSet<NSString *> *selectedIds = [[NJSettingCache sharedInstance] selectedMineServiceIds];
+    NSMutableArray<NJInlineSettingModel *> *models = [NSMutableArray array];
+    for (NSDictionary *service in services) {
+        NSString *serviceId = [service[@"id"] isKindOfClass:[NSString class]] ? service[@"id"] : nil;
+        NSString *title = [service[@"title"] isKindOfClass:[NSString class]] ? service[@"title"] : nil;
+        if (serviceId.length == 0 || title.length == 0) {
+            continue;
+        }
+        BOOL selected = [selectedIds containsObject:serviceId];
+        [models addObject:[[NJInlineSettingModel alloc] initWithTitle:title
+                                                               bizId:serviceId
+                                                            selected:selected]];
+    }
+    NJInlineSettingViewController *inlineVC = [[NJInlineSettingViewController alloc] initWithStyle:UITableViewStylePlain
+                                                                                             title:@"我的-显示的服务"
+                                                                                        dataSource:[models copy]];
+    inlineVC.allowsMultipleSelection = YES;
+    __weak typeof(self) weakSelf = self;
+    inlineVC.multiSelectedHandler = ^(NSArray<NJInlineSettingModel *> * _Nonnull selectedModels) {
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        NSMutableSet<NSString *> *ids = [NSMutableSet set];
+        for (NJInlineSettingModel *model in selectedModels) {
+            [ids addObject:model.bizId];
+        }
+        [[NJSettingCache sharedInstance] saveSelectedMineServiceIds:ids];
+        NSUInteger count = ids.count;
+        viewModel.subTitle = count == 0 ? @"全部隐藏" : [NSString stringWithFormat:@"已选 %lu 项", (unsigned long)count];
+        [strongSelf.tableView reloadData];
+    };
+    [self.settingViewController.navigationController pushViewController:inlineVC animated:YES];
+}
+
+#pragma mark 检查更新
+
+- (void)handleCheckUpdate {
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:NJ_RELEASES_LATEST_URL_STR]];
+    request.timeoutInterval = 15.0;
+    [request setValue:@"application/vnd.github+json" forHTTPHeaderField:@"Accept"];
+    [request setValue:@"BiliBiliPlus" forHTTPHeaderField:@"User-Agent"];
+
+    __weak typeof(self) weakSelf = self;
+    NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithRequest:request
+                                                                  completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            __strong typeof(weakSelf) strongSelf = weakSelf;
+            if (!strongSelf) {
+                return;
+            }
+            if (error || ![data isKindOfClass:[NSData class]]) {
+                [strongSelf showAlertWithTitle:@"检查更新失败"
+                                       message:@"网络请求失败，请稍后重试"];
+                return;
+            }
+            NSError *jsonError = nil;
+            id json = [NSJSONSerialization JSONObjectWithData:data options:0 error:&jsonError];
+            if (![json isKindOfClass:[NSDictionary class]]) {
+                [strongSelf showAlertWithTitle:@"检查更新失败"
+                                       message:@"返回数据解析失败"];
+                return;
+            }
+            NSString *tagName = json[@"tag_name"];
+            NSString *htmlUrl = json[@"html_url"];
+            NSString *latestVersion = [tagName stringByReplacingOccurrencesOfString:@"v" withString:@""];
+            NSString *currentVersion = [NJPluginInfo pluginVersion];
+            if ([latestVersion isEqualToString:currentVersion]) {
+                [strongSelf showAlertWithTitle:@"已是最新版本"
+                                       message:[NSString stringWithFormat:@"当前版本 v%@", currentVersion]];
+            } else {
+                UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"发现新版本"
+                                                                               message:[NSString stringWithFormat:@"最新版本 v%@，当前版本 v%@", latestVersion, currentVersion]
+                                                                        preferredStyle:UIAlertControllerStyleAlert];
+                [alert addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil]];
+                [alert addAction:[UIAlertAction actionWithTitle:@"前往下载" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                    NSURL *url = [NSURL URLWithString:htmlUrl];
+                    if (url) {
+                        [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
+                    }
+                }]];
+                [strongSelf.settingViewController presentViewController:alert animated:YES completion:nil];
+            }
+        });
+    }];
+    [task resume];
+}
+
+#pragma mark 大积分
+
+- (void)handleBigPointSignWithViewModel:(NJSettingSkullViewModel *)viewModel {
+    viewModel.subTitle = @"签到中...";
+    [self.tableView reloadData];
+    __weak typeof(self) weakSelf = self;
+    [NJApiRequest signBigPointWithCompletionHandler:^(BOOL success, NSString * _Nonnull message) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            __strong typeof(weakSelf) strongSelf = weakSelf;
+            if (!strongSelf) {
+                return;
+            }
+            viewModel.subTitle = success ? @"今日已签到" : @"点击领取今日大积分";
+            [strongSelf.tableView reloadData];
+            [strongSelf showAlertWithTitle:success ? @"大积分签到成功" : @"大积分签到失败"
+                                   message:message];
+        });
+    }];
+}
+
+#pragma mark 提示
+
+- (void)showAlertWithTitle:(NSString *)title message:(NSString *)message {
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:title
+                                                                   message:message
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"知道了" style:UIAlertActionStyleDefault handler:nil]];
+    [self.settingViewController presentViewController:alert animated:YES completion:nil];
 }
 
 // 重启提示

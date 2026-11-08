@@ -15,6 +15,10 @@
 #define NJ_SETTING_FOLLOW_DEFAULT_TAB_VALUE @"all"
 /// 大会员福利（卡券）领取类型
 #define NJ_SETTING_COUPON_TYPE_KEY @"NJ_COUPON_TYPE_KEY"
+/// 「我的」页面可选择的服务
+#define NJ_SETTING_MINE_SERVICES_KEY @"NJ_SETTING_MINE_SERVICES"
+/// 「我的」页面勾选显示的服务
+#define NJ_SETTING_MINE_SELECTED_SERVICES_KEY @"NJ_SETTING_MINE_SELECTED_SERVICES"
 
 @implementation NJSettingCache
 
@@ -111,6 +115,38 @@
 - (void)saveFollowDefaultTab:(NSString *)tab {
     [[NSUserDefaults standardUserDefaults] setObject:tab
                                               forKey:NJ_SETTING_FOLLOW_DEFAULT_TAB_KEY];
+}
+
+#pragma mark 「我的」页面服务
+
+/// 「我的」页面可选择的全部服务
+- (NSArray<NSDictionary *> *)mineServices {
+    id value = [[NSUserDefaults standardUserDefaults] objectForKey:NJ_SETTING_MINE_SERVICES_KEY];
+    if (![value isKindOfClass:[NSArray class]]) {
+        return @[];
+    }
+    return value;
+}
+
+/// 保存「我的」页面可选择的服务
+- (void)saveMineServices:(NSArray<NSDictionary *> *)services {
+    [[NSUserDefaults standardUserDefaults] setObject:services
+                                              forKey:NJ_SETTING_MINE_SERVICES_KEY];
+}
+
+/// 「我的」页面用户勾选显示的服务 id
+- (NSSet<NSString *> *)selectedMineServiceIds {
+    id value = [[NSUserDefaults standardUserDefaults] objectForKey:NJ_SETTING_MINE_SELECTED_SERVICES_KEY];
+    if (![value isKindOfClass:[NSArray class]]) {
+        return [NSSet set];
+    }
+    return [NSSet setWithArray:value];
+}
+
+/// 保存「我的」页面用户勾选显示的服务 id
+- (void)saveSelectedMineServiceIds:(NSSet<NSString *> *)ids {
+    [[NSUserDefaults standardUserDefaults] setObject:[ids allObjects]
+                                              forKey:NJ_SETTING_MINE_SELECTED_SERVICES_KEY];
 }
 
 #pragma mark - Private Methods

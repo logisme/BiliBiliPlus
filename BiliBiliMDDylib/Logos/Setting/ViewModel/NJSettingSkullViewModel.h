@@ -5,7 +5,7 @@
 //  Created by touchWorld on 2025/8/11.
 //
 
-#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -19,6 +19,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy) NSString *title;
 /// 副标题
 @property (nonatomic, copy) NSString *subTitle;
+/// 副标题颜色（不设置则使用默认颜色）
+@property (nonatomic, strong) UIColor *subTitleColor;
 /// 图标（SF Symbols 名称）
 @property (nonatomic, copy) NSString *iconName;
 
