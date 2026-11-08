@@ -73,8 +73,9 @@
         return cardData;
     }
     // 9.18 起新增 cm_single_v1、cm_single_v7、cm_single_v9 等广告卡片，
-    // 所有以 cm_ 开头的卡片类型都属于商业推广卡片，直接过滤
-    if ([cardType hasPrefix:@"cm_"]) {
+    // 所有包含 cm_ 的卡片类型都属于商业推广卡片，直接过滤
+    if ([cardType hasPrefix:@"cm_"] || [cardType containsString:@"cm_single"] ||
+        [cardType containsString:@"cm_v2"] || [cardType containsString:@"cm_double"]) {
         return nil;
     }
     // 横幅类卡片（含 9.18 新增 banner_v3）统一不展示
@@ -141,21 +142,35 @@
     }
     if ([object isKindOfClass:[NSString class]]) {
         NSString *value = (NSString *)object;
-        return [value containsString:@"mall.bilibili.com"] ||
-               [value containsString:@"bilibili://mall"] ||
-               [value containsString:@"mall/home"] ||
-               [value containsString:@"cm.bilibili.com"];
+        NSString *lower = value.lowercaseString;
+        return [lower containsString:@"mall.bilibili.com"] ||
+               [lower containsString:@"bilibili://mall"] ||
+               [lower containsString:@"mall/home"] ||
+               [lower containsString:@"cm.bilibili.com"] ||
+               [lower isEqualToString:@"mall"] ||
+               [lower isEqualToString:@"ad"];
     }
     if ([object isKindOfClass:[NSDictionary class]]) {
         NSDictionary *dict = (NSDictionary *)object;
         for (id key in dict) {
             NSString *keyName = [key isKindOfClass:[NSString class]] ? (NSString *)key : @"";
             if ([keyName isEqualToString:@"ad_info"] ||
+                [keyName isEqualToString:@"adInfo"] ||
                 [keyName isEqualToString:@"ad_cb"] ||
                 [keyName isEqualToString:@"cm_stock"] ||
                 [keyName isEqualToString:@"cmStock"] ||
+                [keyName isEqualToString:@"cm_info"] ||
+                [keyName isEqualToString:@"cmInfo"] ||
                 [keyName isEqualToString:@"ad_type"] ||
-                [keyName isEqualToString:@"is_ad"]) {
+                [keyName isEqualToString:@"hasAdInfo"] ||
+                [keyName isEqualToString:@"goto_p"] ||
+                [keyName isEqualToString:@"is_ad"] ||
+                [keyName isEqualToString:@"isAd"] ||
+                [keyName isEqualToString:@"smallCoverV5Ad"] ||
+                [keyName isEqualToString:@"banner_item"] ||
+                [keyName isEqualToString:@"bannerItem"] ||
+                [keyName isEqualToString:@"topview"] ||
+                [keyName isEqualToString:@"top_view"]) {
                 return YES;
             }
             if ([self containsAdMarker:dict[key] depth:depth + 1]) {

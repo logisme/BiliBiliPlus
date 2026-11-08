@@ -22,8 +22,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// 会员中心大积分签到
 + (void)signBigPointWithCompletionHandler:(void (^ _Nullable)(BOOL success, NSString *message))completionHandler;
 
-/// 把大积分数额显示到「我的」页面的硬币 Label 旁边
+/// 把大积分数额作为独立 Label 显示在「我的」页面的硬币旁边
 + (void)applyBigPointToCoinLabel:(UILabel *)coinLabel;
+
+/// 在「我的」页面重新排列硬币与大积分 Label（B币、硬币、大积分保持平级）
++ (void)layoutBigPointLabelInArea:(UIView *)area;
 
 @end
 

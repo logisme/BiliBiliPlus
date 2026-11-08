@@ -11,6 +11,12 @@
 
 static NSString * const kInlineSettingCellID = @"BBMFInlineSettingCell";
 
+@interface NJInlineSettingViewController ()
+
+- (BOOL)allModelsSelected;
+
+@end
+
 @implementation NJInlineSettingViewController
 
 #pragma mark - Lifecycle
@@ -47,7 +53,7 @@ static NSString * const kInlineSettingCellID = @"BBMFInlineSettingCell";
 
 - (NSInteger)tableView:(UITableView *)tableView
  numberOfRowsInSection:(NSInteger)section {
-    return self.dataSource.count;
+    return self.dataSource.count + (self.selectAllTitle.length > 0 ? 1 : 0);
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView
@@ -57,13 +63,31 @@ static NSString * const kInlineSettingCellID = @"BBMFInlineSettingCell";
         [tableView dequeueReusableCellWithIdentifier:kInlineSettingCellID
                                         forIndexPath:indexPath];
 
-    NJInlineSettingModel *model = self.dataSource[indexPath.row];
-
-    [cell installWithTitle:model.title
-                isSelected:model.selected];
+    if (self.selectAllTitle.length > 0 && indexPath.row == 0) {
+        [cell installWithTitle:self.selectAllTitle
+                    isSelected:[self allModelsSelected]];
+    } else {
+        NSInteger modelIndex = indexPath.row - (self.selectAllTitle.length > 0 ? 1 : 0);
+        NJInlineSettingModel *model = self.dataSource[modelIndex];
+        [cell installWithTitle:model.title
+                    isSelected:model.selected];
+    }
 
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
     return cell;
+}
+
+/// 是否所有项都已选中
+- (BOOL)allModelsSelected {
+    if (self.dataSource.count == 0) {
+        return NO;
+    }
+    for (NJInlineSettingModel *model in self.dataSource) {
+        if (!model.selected) {
+            return NO;
+        }
+    }
+    return YES;
 }
 
 #pragma mark - UITableViewDelegate
@@ -71,34 +95,51 @@ static NSString * const kInlineSettingCellID = @"BBMFInlineSettingCell";
 - (void)tableView:(UITableView *)tableView
 didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 
-    NJInlineSettingModel *current = self.dataSource[indexPath.row];
+    // 置顶「显示全部」：全选 / 全不选
+    if (self.selectAllTitle.length > 0 && indexPath.row == 0) {
+        BOOL selectAll = ![self allModelsSelected];
+        for (NJInlineSettingModel *model in self.dataSource) {
+            model.selected = selectAll;
+        }
+        [tableView reloadData];
+        [self notifyMultiSelection];
+        return;
+    }
+
+    NSInteger modelIndex = indexPath.row - (self.selectAllTitle.length > 0 ? 1 : 0);
+    NJInlineSettingModel *current = self.dataSource[modelIndex];
 
     if (self.allowsMultipleSelection) {
         // 多选：切换当前项
         current.selected = !current.selected;
         [tableView reloadData];
-
-        NSMutableArray<NJInlineSettingModel *> *selectedModels = [NSMutableArray array];
-        for (NJInlineSettingModel *model in self.dataSource) {
-            if (model.selected) {
-                [selectedModels addObject:model];
-            }
-        }
-        if (self.multiSelectedHandler) {
-            self.multiSelectedHandler([selectedModels copy]);
-        }
+        [self notifyMultiSelection];
         return;
     }
 
     // 单选逻辑（InlineSetting 常见）
     for (NSInteger i = 0; i < self.dataSource.count; i++) {
         NJInlineSettingModel *model = self.dataSource[i];
-        model.selected = (i == indexPath.row);
+        model.selected = (i == modelIndex);
     }
 
     [tableView reloadData];
 
     [self handleBizSelection:current];
+}
+
+/// 通知多选结果
+- (void)notifyMultiSelection {
+    if (!self.multiSelectedHandler) {
+        return;
+    }
+    NSMutableArray<NJInlineSettingModel *> *selectedModels = [NSMutableArray array];
+    for (NJInlineSettingModel *model in self.dataSource) {
+        if (model.selected) {
+            [selectedModels addObject:model];
+        }
+    }
+    self.multiSelectedHandler([selectedModels copy]);
 }
 
 #pragma mark - Business

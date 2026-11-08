@@ -1,13 +1,13 @@
 # BiliBiliPlus
 
 ![Platform](https://img.shields.io/badge/platform-iOS%2CiPadOS-blue.svg)
-![Support](https://img.shields.io/badge/support-bilibili%209.18.0-blue.svg)
+![Support](https://img.shields.io/badge/support-bilibili%20iOS-blue.svg)
 ![Type](https://img.shields.io/badge/output-dylib-orange.svg)
 
 一个通过 **iOS 逆向分析** 实现的 **无广告版哔哩哔哩** 客户端插件，在保留原有功能的基础上，专注于 **广告移除与体验优化**。
 
 > **本项目基于开源项目 [TouchFriend/BiliBiliMApp](https://github.com/TouchFriend/BiliBiliMApp) 二次修改而来**，原作者为 [TouchFriend](https://github.com/TouchFriend)。
-> 本仓库仅在我的修改版本上继续适配哔哩哔哩 9.18.0，并调整了设置界面与分发方式。
+> 本仓库基于该项目的思路继续维护，并调整了设置界面与分发方式。
 > 原项目采用 MIT License，本仓库保留原始许可证与版权声明。
 
 ---
@@ -18,7 +18,7 @@
 - 适用于 **非越狱设备**（需要自行对官方 App 脱壳、注入并重签名）
 - 基于哔哩哔哩官方 App 进行逆向分析与功能修改
 - 仅修改客户端本地逻辑，不涉及任何服务器或接口行为
-- 当前适配版本：**哔哩哔哩 9.18.0**（`tv.danmaku.bilianime`）
+- 适配哔哩哔哩 iOS 客户端（Bundle ID `tv.danmaku.bilianime`），并持续跟进后续版本
 
 如果你在寻找 **越狱环境** 下的方案，可参考原作者的以下项目：
 
@@ -39,7 +39,8 @@
 - 🎨 设置项图标按功能标题显示（不再统一使用骷髅图标）
 - 🔄 新增「检查更新」（设置页点击查询 GitHub 最新版本）
 - 🧩 「我的」页面服务入口支持手动多选显示（默认全部隐藏）
-- ⭐ 会员中心大积分：每日自动签到、手动签到、大积分中心入口，并在「我的」硬币旁显示大积分数额
+- ⭐ 会员中心大积分：每次启动自动签到（已签到不弹窗）、手动签到、大积分中心入口；入口归入「我的服务」，并在硬币旁独立显示大积分数额
+- 🔗 兼容重签名环境下的 QQ 分享（修复 25103 非官方 app）
 
 ---
 
@@ -57,31 +58,31 @@
 
 ## 🔧 相对于原开源项目的改动
 
-### 1. 适配哔哩哔哩 9.18.0
+### 1. 适配新版客户端
 
-9.18.0 修改了若干内部实现，导致原有 hook 全部指向不存在的 selector / 类，本仓库已逐项适配：
+哔哩哔哩新版客户端修改了若干内部实现，导致原有 hook 指向不存在的 selector / 类，本仓库已逐项适配，并会持续跟进后续版本：
 
 | 问题 | 原因 | 修复 |
 | --- | --- | --- |
 | 会员购、底部发布 +、广告去除全部失效 | `BFCRequest` 初始化方法去掉了 `priority:` 参数，原 hook 未生效，整个响应过滤管道没有接上 | 改为 hook `BFCRequest -handleFinishCallbackWithData:response:error:`，统一在响应回调入口过滤数据 |
-| 底部「发布 +」开关无效 | 9.18 的 tab 数据中发布项没有 `tab_id` | 增加 `uri` 包含 `uper/center_plus`、`type == 3` 的兜底识别 |
+| 底部「发布 +」开关无效 | 新版 tab 数据中发布项没有 `tab_id` | 增加 `uri` 包含 `uper/center_plus`、`type == 3` 的兜底识别 |
 | 会员购开关无效 | tab 数据结构变化 | 增加 `uri` 包含 `mall/home` 的兜底识别 |
-| 首页仍出现广告 | 9.18 新增 `cm_single_v1`、`cm_single_v7`、`cm_single_v9` 等广告卡片类型 | 过滤所有 `cm_` 开头卡片，以及带 `ad_info` / `card_goto == "ad"` 的卡片 |
-| 相关视频下方出现广告 | 9.18 详情页改用 `BBMediaUniteRelateObject` 模型，旧的卡片过滤不再覆盖 | hook `BBMediaDescUniteRelateVideoObject.relateVideos`，剔除 `BBMediaUniteRelateADObject` 与 `cmStock == YES` 的对象 |
-| 播放一段时间后弹出视频下方广告（评论位置） | 9.18 改由 KMP / 新广告宿主展示 | 拦截 `BBAdUGCContext` 广告加载；拦截 `PlayerCommentAdHost`、`VideoDetailAdCommentNativeHost` 的 `showPanelType:` 与相关商品面板；隐藏倒计时 View |
+| 首页出现广告 / 会员购推广卡片 | 新版信息流改用新的卡片类型与 GPB 模型链路 | 过滤 `cm_*` 广告卡片、广告模型以及 `cardGoto` / `goto` / `uri` 指向会员购的卡片 |
+| 相关视频下方出现广告 | 详情页改用 `BBMediaUniteRelateObject` 模型，旧的卡片过滤不再覆盖 | hook `BBMediaDescUniteRelateVideoObject.relateVideos`，剔除 `BBMediaUniteRelateADObject` 与 `cmStock == YES` 的对象 |
+| 播放一段时间后弹出视频下方广告（评论位置） | 改由 KMP / 新广告宿主展示 | 拦截 `BBAdUGCContext` 广告加载；拦截 `PlayerCommentAdHost`、`VideoDetailAdCommentNativeHost` 的 `showPanelType:` 与相关商品面板；隐藏倒计时 View |
+| 重签名后 QQ 分享提示 25103 | QQ 校验的 BundleID 与开放平台登记值不一致 | 在 QQ SDK 构建分享请求时统一使用官方 BundleID |
 
 ### 2. 设置界面
 
-- 「官网」改为本仓库地址
-- 新增「原开源项目」入口，注明本项目来源
+- 「项目地址」入口指向本仓库，并新增「原开源项目」入口注明本项目来源
 - 每个设置项按功能标题显示对应的 SF Symbols 图标，替换原来的统一骷髅图标
-- 插件版本号更新为 `2.7.0`
+- 插件版本号独立维护（当前 `2.8.1`）
 
 ### 3. 分发方式
 
 - **不再提供注入后的 IPA**，仅提供编译好的 dylib
 - 仓库内 `Release/libBiliBiliMDDylib.dylib` 为当前版本构建产物
-- 需要自行准备已脱壳的哔哩哔哩 9.18.0 App 进行注入
+- 需要自行准备已脱壳的哔哩哔哩 App 进行注入
 
 ---
 
@@ -130,7 +131,7 @@ build/Release-iphoneos/libBiliBiliMDDylib.dylib
 
 ## 📦 自行注入 dylib
 
-本项目不提供 IPA，也不提供脱壳 App。你需要自行准备**已脱壳**的哔哩哔哩 9.18.0 `bili-universal.app`，然后：
+本项目不提供 IPA，也不提供脱壳 App。你需要自行准备**已脱壳**的哔哩哔哩 `bili-universal.app`，然后：
 
 1. 将 `libBiliBiliMDDylib.dylib` 复制到：
 
@@ -188,10 +189,9 @@ install_name_tool -change /opt/theos/vendor/lib/libsubstrate.dylib \
 
 - 总开关
 - 底部栏：发布（+）、会员购
-- 我的：显示的服务（多选，默认全部隐藏）
+- 我的：显示的服务（多选，默认全部隐藏，含大积分签到 / 大积分中心）
 - 默认播放速度、关注页默认版块、大会员福利
-- 大积分签到、大积分中心
-- 竖屏模式、分享数据、版本、检查更新、官网、项目地址
+- 竖屏模式、版本、检查更新、项目地址
 
 修改总开关或部分功能后需要重启 App 才会完全生效。
 

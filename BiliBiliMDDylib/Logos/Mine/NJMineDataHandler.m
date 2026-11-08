@@ -8,6 +8,8 @@
 #import "NJMineDataHandler.h"
 #import "NJSettingCache.h"
 
+/// 大积分签到入口 id（自定义，不与官方 id 冲突）
+#define NJ_BIG_POINT_SIGN_ITEM_ID 9998
 /// 大积分中心入口 id（自定义，不与官方 id 冲突）
 #define NJ_BIG_POINT_CENTER_ITEM_ID 9999
 
@@ -66,9 +68,10 @@
         }
     }
 
-    // 大积分中心入口：用户勾选后才显示
-    if ([selectedIds containsObject:[@(NJ_BIG_POINT_CENTER_ITEM_ID) stringValue]]) {
-        [newMineData addObject:[self bigPointCenterSection]];
+    // 大积分入口：合并进已有的「更多服务」分组，避免出现两个同名分组
+    NSArray<NSDictionary *> *bigPointItems = [self selectedBigPointItems:selectedIds];
+    if (bigPointItems.count > 0) {
+        [self mergeBigPointItems:bigPointItems intoSections:newMineData];
     }
     return [newMineData copy];
 }
@@ -100,7 +103,9 @@
             [services addObject:@{@"id": itemIdStr, @"title": title}];
         }
     }
-    // 追加大积分中心
+    // 追加大积分入口
+    [services addObject:@{@"id": [@(NJ_BIG_POINT_SIGN_ITEM_ID) stringValue],
+                          @"title": @"大积分签到"}];
     [services addObject:@{@"id": [@(NJ_BIG_POINT_CENTER_ITEM_ID) stringValue],
                           @"title": @"大积分中心"}];
     [[NJSettingCache sharedInstance] saveMineServices:[services copy]];
@@ -151,23 +156,140 @@
     return nil;
 }
 
-/// 大积分中心分组
-- (NSDictionary *)bigPointCenterSection {
-    NSDictionary *item = @{
-        @"id": @(NJ_BIG_POINT_CENTER_ITEM_ID),
-        @"title": @"大积分中心",
-        @"uri": @"https://big.bilibili.com/mobile/bigPoint?closable=1&msource=0",
-        @"icon": @"https://i0.hdslb.com/bfs/archive/e932404f2ee62e075a772920019e9fbdb4b5656a.png",
-        @"common_op_item": @{},
-        @"corner_pixel": @(0),
-        @"biz_type": @(0),
-    };
-    return @{
-        @"title": @"更多服务",
-        @"items": @[item],
-        @"style": @(2),
-        @"button": @{},
-    };
+/// 已勾选的大积分入口
+- (NSArray<NSDictionary *> *)selectedBigPointItems:(NSSet<NSString *> *)selectedIds {
+    NSMutableArray<NSDictionary *> *items = [NSMutableArray array];
+    if ([selectedIds containsObject:[@(NJ_BIG_POINT_SIGN_ITEM_ID) stringValue]]) {
+        [items addObject:@{
+            @"id": @(NJ_BIG_POINT_SIGN_ITEM_ID),
+            @"title": @"大积分签到",
+            @"uri": @"njbigpoint://sign",
+            // 图标在 Cell 层替换为本地绘制的签到图标
+            @"icon": @"",
+            @"common_op_item": @{},
+            @"corner_pixel": @(0),
+            @"biz_type": @(0),
+        }];
+    }
+    if ([selectedIds containsObject:[@(NJ_BIG_POINT_CENTER_ITEM_ID) stringValue]]) {
+        [items addObject:@{
+            @"id": @(NJ_BIG_POINT_CENTER_ITEM_ID),
+            @"title": @"大积分中心",
+            @"uri": @"https://big.bilibili.com/mobile/bigPoint?closable=1&msource=0",
+            // 图标在 Cell 层替换为本地绘制的大积分图标
+            @"icon": @"",
+            @"common_op_item": @{},
+            @"corner_pixel": @(0),
+            @"biz_type": @(0),
+        }];
+    }
+    return [items copy];
+}
+
+/// 把大积分入口固定合并进「我的服务」分组，不影响「更多服务」分组
+- (void)mergeBigPointItems:(NSArray<NSDictionary *> *)items intoSections:(NSMutableArray *)sections {
+    // 合并重复的同名分组（只合并同名分组，不跨分组合并）
+    [self mergeDuplicateSectionsTitled:@"我的服务" inSections:sections];
+    [self mergeDuplicateSectionsTitled:@"更多服务" inSections:sections];
+
+    NSInteger targetIndex = NSNotFound;
+    for (NSInteger i = 0; i < sections.count; i++) {
+        NSString *sectionTitle = sections[i][@"title"];
+        if ([sectionTitle isKindOfClass:[NSString class]] &&
+            [sectionTitle isEqualToString:@"我的服务"]) {
+            targetIndex = i;
+            break;
+        }
+    }
+
+    if (targetIndex == NSNotFound) {
+        // 「我的服务」分组可能因为服务全部隐藏而被过滤掉，需要重新创建
+        NSMutableDictionary *newSection = [@{
+            @"title": @"我的服务",
+            @"items": items,
+            @"style": @(2),
+            @"button": @{},
+        } mutableCopy];
+        // 保持在「更多服务」之前，符合「我的」页面的原有顺序
+        NSInteger insertIndex = sections.count;
+        for (NSInteger i = 0; i < sections.count; i++) {
+            NSString *sectionTitle = sections[i][@"title"];
+            if ([sectionTitle isKindOfClass:[NSString class]] &&
+                [sectionTitle isEqualToString:@"更多服务"]) {
+                insertIndex = i;
+                break;
+            }
+        }
+        [sections insertObject:newSection atIndex:insertIndex];
+        return;
+    }
+
+    NSMutableArray *targetItems = [NSMutableArray array];
+    NSArray *sectionItems = sections[targetIndex][@"items"];
+    if ([sectionItems isKindOfClass:[NSArray class]]) {
+        [targetItems addObjectsFromArray:sectionItems];
+    }
+    [targetItems addObjectsFromArray:items];
+
+    // 按 id 去重，避免重复出现「设置」等条目
+    NSMutableArray *uniqueItems = [NSMutableArray array];
+    NSMutableSet *seenIds = [NSMutableSet set];
+    for (NSDictionary *item in targetItems) {
+        id itemId = item[@"id"];
+        NSString *idKey = [itemId isKindOfClass:[NSNumber class]] ? [itemId stringValue] : nil;
+        if (idKey.length > 0) {
+            if ([seenIds containsObject:idKey]) {
+                continue;
+            }
+            [seenIds addObject:idKey];
+        }
+        [uniqueItems addObject:item];
+    }
+    NSMutableDictionary *newSection = [sections[targetIndex] mutableCopy];
+    newSection[@"items"] = [uniqueItems copy];
+    sections[targetIndex] = newSection;
+}
+
+/// 合并同名分组（把后续同名分组的条目合并到第一个同名分组）
+- (void)mergeDuplicateSectionsTitled:(NSString *)title inSections:(NSMutableArray *)sections {
+    NSInteger targetIndex = NSNotFound;
+    for (NSInteger i = 0; i < sections.count; i++) {
+        NSString *sectionTitle = sections[i][@"title"];
+        if ([sectionTitle isKindOfClass:[NSString class]] &&
+            [sectionTitle isEqualToString:title]) {
+            targetIndex = i;
+            break;
+        }
+    }
+    if (targetIndex == NSNotFound) {
+        return;
+    }
+    NSMutableArray *targetItems = [NSMutableArray array];
+    NSArray *sectionItems = sections[targetIndex][@"items"];
+    if ([sectionItems isKindOfClass:[NSArray class]]) {
+        [targetItems addObjectsFromArray:sectionItems];
+    }
+
+    NSMutableIndexSet *removeIndexes = [NSMutableIndexSet indexSet];
+    for (NSInteger i = targetIndex + 1; i < sections.count; i++) {
+        NSString *sectionTitle = sections[i][@"title"];
+        if (![sectionTitle isKindOfClass:[NSString class]] ||
+            ![sectionTitle isEqualToString:title]) {
+            continue;
+        }
+        NSArray *duplicateItems = sections[i][@"items"];
+        if ([duplicateItems isKindOfClass:[NSArray class]]) {
+            [targetItems addObjectsFromArray:duplicateItems];
+        }
+        [removeIndexes addIndex:i];
+    }
+    if (removeIndexes.count == 0) {
+        return;
+    }
+    NSMutableDictionary *newSection = [sections[targetIndex] mutableCopy];
+    newSection[@"items"] = [targetItems copy];
+    sections[targetIndex] = newSection;
+    [sections removeObjectsAtIndexes:removeIndexes];
 }
 
 #pragma mark - Property Methods

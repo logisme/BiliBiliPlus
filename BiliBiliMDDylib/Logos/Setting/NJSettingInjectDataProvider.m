@@ -42,16 +42,8 @@
                                                            cellId:NJ_SWITCH_CELL_ID
                                                             title:@"竖屏模式"
                                                                   on:NJ_VERTICAL_SCREEN_MODE_VALUE saveKey:NJ_VERTICAL_SCREEN_MODE_KEY]];
-    [datas addObject:[[NJSettingSkullViewModel alloc] initWithBizId:NJ_SHARE_DATA_BIZ_ID
-                                                             cellId:NJ_COMMON_CELL_ID
-                                                              title:@"分享数据"]];
     [datas addObject:[self version]];
     [datas addObject:[self checkUpdate]];
-    [datas addObject:[self bigPointSign]];
-    [datas addObject:[self bigPointCenter]];
-    [datas addObject:[[NJSettingSkullViewModel alloc] initWithBizId:NJ_OFFICIAL_WEBSITE_BIZ_ID
-                                                             cellId:NJ_COMMON_CELL_ID
-                                                              title:@"官网"]];
     [datas addObject:[[NJSettingSkullViewModel alloc] initWithBizId:NJ_UPSTREAM_WEBSITE_BIZ_ID
                                                              cellId:NJ_COMMON_CELL_ID
                                                               title:@"项目地址"]];
@@ -215,25 +207,5 @@
                                                 dark:[UIColor nj_colorWithHexString:@"#3DDC84"]];
     return model;
 }
-
-/// 大积分签到
-- (NJSettingSkullViewModel *)bigPointSign {
-    NJSettingSkullViewModel *model = [[NJSettingSkullViewModel alloc] initWithBizId:NJ_BIG_POINT_SIGN_BIZ_ID
-                                                                             cellId:NJ_COMMON_CELL_ID
-                                                                              title:@"大积分签到"];
-    model.subTitle = @"点击领取今日大积分";
-    return model;
-}
-
-/// 大积分中心
-- (NJSettingSkullViewModel *)bigPointCenter {
-    NJSettingSkullViewModel *model = [[NJSettingSkullViewModel alloc] initWithBizId:NJ_BIG_POINT_CENTER_BIZ_ID
-                                                                             cellId:NJ_COMMON_CELL_ID
-                                                                              title:@"大积分中心"];
-    model.subTitle = @"打开网页";
-    return model;
-}
-
-
 
 @end

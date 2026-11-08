@@ -245,6 +245,7 @@
                                                                                              title:@"我的-显示的服务"
                                                                                         dataSource:[models copy]];
     inlineVC.allowsMultipleSelection = YES;
+    inlineVC.selectAllTitle = @"显示全部";
     __weak typeof(self) weakSelf = self;
     inlineVC.multiSelectedHandler = ^(NSArray<NJInlineSettingModel *> * _Nonnull selectedModels) {
         __strong typeof(weakSelf) strongSelf = weakSelf;

@@ -31,6 +31,44 @@
 
 @end
 
+/// 过滤开屏 / 首页顶部焦点图（TopView）广告：清空下发列表，避免广告混入信息流
+static NSData *NJFilterSplashResponseData(NSData *data) {
+    if (![data isKindOfClass:[NSData class]]) {
+        return data;
+    }
+    id json = [NSJSONSerialization JSONObjectWithData:data
+                                             options:NSJSONReadingMutableContainers
+                                               error:nil];
+    if (![json isKindOfClass:[NSMutableDictionary class]]) {
+        return data;
+    }
+    NSMutableDictionary *root = (NSMutableDictionary *)json;
+    id dataObject = root[@"data"];
+    if ([dataObject isKindOfClass:[NSMutableDictionary class]]) {
+        NSMutableDictionary *dataDic = (NSMutableDictionary *)dataObject;
+        NSArray<NSString *> *listKeys = @[@"list", @"items", @"splash_list", @"event_list",
+                                         @"top_view_list", @"topview_list"];
+        for (NSString *key in listKeys) {
+            if ([dataDic[key] isKindOfClass:[NSArray class]]) {
+                dataDic[key] = @[];
+            }
+        }
+        // 顶部焦点图（TopView）字段
+        for (NSString *key in [dataDic allKeys]) {
+            NSString *lowerKey = [key lowercaseString];
+            if ([lowerKey containsString:@"topview"] ||
+                [lowerKey containsString:@"top_view"] ||
+                [lowerKey isEqualToString:@"banner_item"]) {
+                [dataDic removeObjectForKey:key];
+            }
+        }
+    } else if ([dataObject isKindOfClass:[NSArray class]]) {
+        root[@"data"] = @[];
+    }
+    NSData *filteredData = [NSJSONSerialization dataWithJSONObject:root options:0 error:nil];
+    return filteredData ?: data;
+}
+
 @implementation NJApiDataManger
 
 @synthesize itemClasses = _itemClasses;
@@ -84,6 +122,12 @@
     if (error) {
         return data;
     }
+    NSString *path = response.URL.path;
+    if (path.length > 0 &&
+        ([path containsString:@"/splash/list"] ||
+         [path containsString:@"/splash/brand/list"])) {
+        data = NJFilterSplashResponseData(data);
+    }
     NSString *urlStr = response.URL.nj_fullPath;
     if (urlStr.length == 0) {
         return data;
@@ -92,10 +136,10 @@
     if (!item) {
         // 9.18 起部分接口会走备用域名（如 app.biliapi.net），
         // 完整 URL 不再匹配，这里按 path 兜底匹配
-        NSString *path = response.URL.path;
-        if (path.length > 0) {
+        NSString *requestPath = response.URL.path;
+        if (requestPath.length > 0) {
             for (NSString *key in self.itemDic) {
-                if ([[NSURL URLWithString:key].path isEqualToString:path]) {
+                if ([[NSURL URLWithString:key].path isEqualToString:requestPath]) {
                     item = self.itemDic[key];
                     break;
                 }

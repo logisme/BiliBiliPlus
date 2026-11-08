@@ -19,6 +19,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL allowsMultipleSelection;
 /// 多选变化闭包（返回当前所有选中项）
 @property (nonatomic, copy) void (^multiSelectedHandler)(NSArray<NJInlineSettingModel *> *selectedModels);
+/// 置顶「显示全部」行标题（为空则不显示）
+@property (nonatomic, copy) NSString *selectAllTitle;
 
 
 - (instancetype)initWithStyle:(UITableViewStyle)style
