@@ -173,7 +173,29 @@
                 [keyName isEqualToString:@"top_view"]) {
                 return YES;
             }
-            if ([self containsAdMarker:dict[key] depth:depth + 1]) {
+            id value = dict[key];
+            if ([value isKindOfClass:[NSString class]]) {
+                NSString *stringValue = (NSString *)value;
+                if ([stringValue containsString:@"创作推广"]) {
+                    return YES;
+                }
+                NSString *lowerKey = keyName.lowercaseString;
+                BOOL isLabelKey = [lowerKey containsString:@"badge"] ||
+                                  [lowerKey containsString:@"reason"] ||
+                                  [lowerKey containsString:@"label"] ||
+                                  [lowerKey containsString:@"tag"] ||
+                                  [lowerKey containsString:@"coverlefttext"] ||
+                                  [lowerKey containsString:@"coverrighttext"] ||
+                                  [lowerKey containsString:@"desc"] ||
+                                  [lowerKey containsString:@"subtitle"];
+                if (isLabelKey &&
+                    ([stringValue containsString:@"商业推广"] ||
+                     [stringValue containsString:@"品牌推广"] ||
+                     [stringValue isEqualToString:@"广告"])) {
+                    return YES;
+                }
+            }
+            if ([self containsAdMarker:value depth:depth + 1]) {
                 return YES;
             }
         }

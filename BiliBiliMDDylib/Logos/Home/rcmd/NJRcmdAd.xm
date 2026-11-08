@@ -106,7 +106,13 @@ static BOOL NJPegasusClassIsAd(NSString *className) {
         @"AdMall",          // 会员购推广卡片（AdMallGoodsCardModel 等）
         @"BBAdMall",        // 会员购广告模块
         @"AdGoodsCard",     // 会员购商品卡片
-        @"AdRecommendCard"  // 会员购推荐卡片
+        @"AdRecommendCard", // 会员购推荐卡片
+        @"AdCard",          // 信息流广告卡片（BBAdCardV2 等）
+        @"BBAdCard",        // 广告卡片模块
+        @"CreativeAd",      // 创作推广
+        @"AdCreative",      // 创意广告
+        @"PromotionCard",   // 推广卡片
+        @"Mall"             // 会员购 / 电商推广卡片
     ];
     for (NSString *marker in markers) {
         if ([className containsString:marker]) {
@@ -114,6 +120,34 @@ static BOOL NJPegasusClassIsAd(NSString *className) {
         }
     }
     return NO;
+}
+
+/// 判断字符串是否是「创作推广 / 广告」等推广标签
+static BOOL NJPegasusStringIsAdLabel(NSString *value) {
+    if (![value isKindOfClass:[NSString class]] || value.length == 0) {
+        return NO;
+    }
+    return [value containsString:@"创作推广"] ||
+           [value containsString:@"商业推广"] ||
+           [value containsString:@"品牌推广"] ||
+           [value containsString:@"推广视频"] ||
+           [value isEqualToString:@"广告"];
+}
+
+/// 判断字段名是否可能承载推广标签
+static BOOL NJPegasusKeyIsLabelKey(NSString *key) {
+    if (![key isKindOfClass:[NSString class]] || key.length == 0) {
+        return NO;
+    }
+    NSString *lower = key.lowercaseString;
+    return [lower containsString:@"badge"] ||
+           [lower containsString:@"reason"] ||
+           [lower containsString:@"label"] ||
+           [lower containsString:@"tag"] ||
+           [lower containsString:@"coverlefttext"] ||
+           [lower containsString:@"coverrighttext"] ||
+           [lower containsString:@"desc"] ||
+           [lower containsString:@"subtitle"];
 }
 
 /// 判断字符串是否指向会员购 / 商业推广落地页
@@ -166,7 +200,15 @@ static BOOL NJPegasusObjectContainsMallAd(id object, NSInteger depth) {
                 [keyName isEqualToString:@"top_view"]) {
                 return YES;
             }
-            if (NJPegasusObjectContainsMallAd(dict[key], depth + 1)) {
+            id value = dict[key];
+            if ([value isKindOfClass:[NSString class]]) {
+                // 「创作推广」等标签不管出现在哪个字段都视为推广
+                if ([(NSString *)value containsString:@"创作推广"] ||
+                    (NJPegasusKeyIsLabelKey(keyName) && NJPegasusStringIsAdLabel((NSString *)value))) {
+                    return YES;
+                }
+            }
+            if (NJPegasusObjectContainsMallAd(value, depth + 1)) {
                 return YES;
             }
         }
@@ -249,6 +291,13 @@ static BOOL NJPegasusObjectContainsMallAd(id object, NSInteger depth) {
             if ([key hasSuffix:@"Ad"]) {
                 found = YES;
                 break;
+            }
+            if ([value isKindOfClass:[NSString class]]) {
+                if ([(NSString *)value containsString:@"创作推广"] ||
+                    (NJPegasusKeyIsLabelKey(key) && NJPegasusStringIsAdLabel((NSString *)value))) {
+                    found = YES;
+                    break;
+                }
             }
             if (NJPegasusObjectContainsMallAd(value, depth + 1)) {
                 found = YES;
@@ -446,6 +495,20 @@ static NSArray *NJFilterPegasusAdCards(NSArray *array) {
 
 // 列表数据源兜底：新增/替换卡片时同样剔除广告
 %hook BBHD2PhonePegasusBaseListVM
+
+- (void)addObject:(id)object {
+    if (NJPegasusObjectIsAd(object)) {
+        return;
+    }
+    %orig;
+}
+
+- (void)insertObject:(id)object atIndex:(NSUInteger)index {
+    if (NJPegasusObjectIsAd(object)) {
+        return;
+    }
+    %orig;
+}
 
 - (void)addObjectsFromArray:(NSArray *)array {
     %orig(NJFilterPegasusAdCards(array));
