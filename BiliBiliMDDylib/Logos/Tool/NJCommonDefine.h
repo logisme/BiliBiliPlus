@@ -14,8 +14,6 @@
 NS_ASSUME_NONNULL_BEGIN
 
 
-/// 设置的缓存
-#define NJ_SETTING_CACHE [NJSettingCache sharedInstance].cache
 /// 图片资源路径
 #define NJ_IMAGE_ASSET_PATH(path) [NJAsset pathForImageAsset:path]
 /// 资源路径
@@ -47,39 +45,44 @@ NS_ASSUME_NONNULL_BEGIN
 /// --------------------- 设置页面 ---------------------
 /// 总开关
 #define NJ_MASTER_SWITCH_KEY @"NJ_MASTER_SWITCH_KEY"
-/// 总开关的值
-#define NJ_MASTER_SWITCH_VALUE (![NJ_SETTING_CACHE containsObjectForKey:NJ_MASTER_SWITCH_KEY] || \
-[(NSNumber *)[NJ_SETTING_CACHE objectForKey:NJ_MASTER_SWITCH_KEY] boolValue])
+/// 总开关的值（默认开启）
+#define NJ_MASTER_SWITCH_VALUE ([[NJSettingCache sharedInstance] boolForKey:NJ_MASTER_SWITCH_KEY \
+                                                                defaultValue:YES])
 
 /// 底部栏-发布(+)
 #define NJ_PUBLISH_KEY @"NJ_PUBLISH_KEY"
-/// 底部栏-发布(+)的值
-#define NJ_PUBLISH_VALUE ([NJ_SETTING_CACHE containsObjectForKey:NJ_PUBLISH_KEY] && \
-[(NSNumber *)[NJ_SETTING_CACHE objectForKey:NJ_PUBLISH_KEY] boolValue])
+/// 底部栏-发布(+)的值（默认关闭）
+#define NJ_PUBLISH_VALUE ([[NJSettingCache sharedInstance] boolForKey:NJ_PUBLISH_KEY \
+                                                              defaultValue:NO])
 
 /// 底部栏-会员购
 #define NJ_MALL_KEY @"NJ_MALL_KEY"
-/// 底部栏-会员购的值
-#define NJ_MALL_VALUE ([NJ_SETTING_CACHE containsObjectForKey:NJ_MALL_KEY] && \
-[(NSNumber *)[NJ_SETTING_CACHE objectForKey:NJ_MALL_KEY] boolValue])
+/// 底部栏-会员购的值（默认关闭）
+#define NJ_MALL_VALUE ([[NJSettingCache sharedInstance] boolForKey:NJ_MALL_KEY \
+                                                          defaultValue:NO])
 
 /// 我的-不常用服务
 #define NJ_UNUSED_SERVICE_KEY @"NJ_UNUSED_SERVICE_KEY"
-/// 我的-不常用服务的值
-#define NJ_UNUSED_SERVICE_VALUE ([NJ_SETTING_CACHE containsObjectForKey:NJ_UNUSED_SERVICE_KEY] && \
-[(NSNumber *)[NJ_SETTING_CACHE objectForKey:NJ_UNUSED_SERVICE_KEY] boolValue])
+/// 我的-不常用服务的值（默认关闭）
+#define NJ_UNUSED_SERVICE_VALUE ([[NJSettingCache sharedInstance] boolForKey:NJ_UNUSED_SERVICE_KEY \
+                                                                      defaultValue:NO])
 
-/// 自动领取大会员福利
-#define NJ_AUTO_RECEIVE_COUPON_KEY @"NJ_AUTO_RECEIVE_COUPON_KEY"
-/// 自动领取大会员福利的值
-#define NJ_AUTO_RECEIVE_COUPON_VALUE (![NJ_SETTING_CACHE containsObjectForKey:NJ_AUTO_RECEIVE_COUPON_KEY] || \
-[(NSNumber *)[NJ_SETTING_CACHE objectForKey:NJ_AUTO_RECEIVE_COUPON_KEY] boolValue])
+/// 大会员福利（卡券）领取类型，0=不领取
+#define NJ_COUPON_TYPE_VALUE ([[NJSettingCache sharedInstance] couponType])
+
+/// 大会员福利类型
+/// 0：不领取
+/// 1：B币券
+/// 14：观影券
+#define NJ_COUPON_TYPE_NONE 0
+#define NJ_COUPON_TYPE_B_COIN 1
+#define NJ_COUPON_TYPE_MOVIE 14
 
 /// 竖屏模式
 #define NJ_VERTICAL_SCREEN_MODE_KEY @"NJ_VERTICAL_SCREEN_MODE_KEY"
-/// 竖屏模式的值
-#define NJ_VERTICAL_SCREEN_MODE_VALUE ([NJ_SETTING_CACHE containsObjectForKey:NJ_VERTICAL_SCREEN_MODE_KEY] && \
-[(NSNumber *)[NJ_SETTING_CACHE objectForKey:NJ_VERTICAL_SCREEN_MODE_KEY] boolValue])
+/// 竖屏模式的值（默认关闭）
+#define NJ_VERTICAL_SCREEN_MODE_VALUE ([[NJSettingCache sharedInstance] boolForKey:NJ_VERTICAL_SCREEN_MODE_KEY \
+                                                                          defaultValue:NO])
 
 /// --------------------- 设置页面 ---------------------
 

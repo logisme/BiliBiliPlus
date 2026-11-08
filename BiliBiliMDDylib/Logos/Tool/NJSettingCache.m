@@ -13,6 +13,8 @@
 /// 关注的默认版块
 #define NJ_SETTING_FOLLOW_DEFAULT_TAB_KEY @"SETTING_FOLLOW_DEFAULT_TAB"
 #define NJ_SETTING_FOLLOW_DEFAULT_TAB_VALUE @"all"
+/// 大会员福利（卡券）领取类型
+#define NJ_SETTING_COUPON_TYPE_KEY @"NJ_COUPON_TYPE_KEY"
 
 @implementation NJSettingCache
 
@@ -27,41 +29,54 @@
     return _sharedInstance;
 }
 
-- (instancetype)init {
-    self = [super init];
-    if (self) {
-        [self doInit];
-    }
-    return self;
-}
-
-
-
-#pragma mark - Do Init
-
-- (void)doInit {
-    YYCache *cache = [[NSClassFromString(@"YYCache") alloc] initWithName:@"NJCache"];
-    cache.memoryCache.costLimit = 50 * 1024 * 1024; // 50MB
-    cache.memoryCache.countLimit = 1000;            // 最多 1000 个对象
-    cache.diskCache.costLimit = 400 * 1024 * 1024;  // 400MB
-    self.cache = cache;
-}
-
-
 #pragma mark - Override Methods
 
 #pragma mark - Public Methods
+
+#pragma mark 开关设置
+
+/// 读取开关设置
+- (BOOL)boolForKey:(NSString *)key defaultValue:(BOOL)defaultValue {
+    id value = [[NSUserDefaults standardUserDefaults] objectForKey:key];
+    if (![value isKindOfClass:[NSNumber class]]) {
+        return defaultValue;
+    }
+    return [value boolValue];
+}
+
+/// 保存开关设置
+- (void)saveBool:(BOOL)value forKey:(NSString *)key {
+    [[NSUserDefaults standardUserDefaults] setBool:value forKey:key];
+}
+
+#pragma mark 大会员福利（卡券）领取类型
+
+/// 大会员福利（卡券）领取类型
+- (NSInteger)couponType {
+    id value = [[NSUserDefaults standardUserDefaults] objectForKey:NJ_SETTING_COUPON_TYPE_KEY];
+    if (![value isKindOfClass:[NSNumber class]]) {
+        return 0;
+    }
+    return [value integerValue];
+}
+
+/// 保存大会员福利（卡券）领取类型
+- (void)saveCouponType:(NSInteger)type {
+    [[NSUserDefaults standardUserDefaults] setInteger:type
+                                               forKey:NJ_SETTING_COUPON_TYPE_KEY];
+}
 
 #pragma mark 默认播放速度
 
 /// 获取默认播放速度
 - (NSString *)defaultPlaybackRate {
-    NSString *rate = (NSString *)[self.cache objectForKey:NJ_SETTING_DEFAULT_PLAYBACK_RATE_KEY];
+    NSString *rate = [[NSUserDefaults standardUserDefaults] stringForKey:NJ_SETTING_DEFAULT_PLAYBACK_RATE_KEY];
     // 使用默认值
     if (rate.length == 0) {
         rate = NJ_SETTING_DEFAULT_PLAYBACK_RATE_VALUE;
         // 保存
-        [self.cache setObject:rate forKey:NJ_SETTING_DEFAULT_PLAYBACK_RATE_KEY];
+        [[NSUserDefaults standardUserDefaults] setObject:rate
+                                                  forKey:NJ_SETTING_DEFAULT_PLAYBACK_RATE_KEY];
     }
     return rate;
 }
@@ -73,30 +88,29 @@
 
 /// 保存默认播放速度
 - (void)saveDefaultPlaybackRate:(NSString *)rate {
-    [self.cache setObject:rate
-                   forKey:NJ_SETTING_DEFAULT_PLAYBACK_RATE_KEY
-                withBlock:nil];
+    [[NSUserDefaults standardUserDefaults] setObject:rate
+                                              forKey:NJ_SETTING_DEFAULT_PLAYBACK_RATE_KEY];
 }
 
 #pragma mark 关注的默认版块
 
 /// 关注的默认版块
 - (NSString *)followDefaultTab {
-    NSString *tab = (NSString *)[self.cache objectForKey:NJ_SETTING_FOLLOW_DEFAULT_TAB_KEY];
+    NSString *tab = [[NSUserDefaults standardUserDefaults] stringForKey:NJ_SETTING_FOLLOW_DEFAULT_TAB_KEY];
     // 使用默认值
     if (tab.length == 0) {
         tab = NJ_SETTING_FOLLOW_DEFAULT_TAB_VALUE;
         // 保存
-        [self.cache setObject:tab forKey:NJ_SETTING_FOLLOW_DEFAULT_TAB_KEY];
+        [[NSUserDefaults standardUserDefaults] setObject:tab
+                                                  forKey:NJ_SETTING_FOLLOW_DEFAULT_TAB_KEY];
     }
     return tab;
 }
 
 /// 保存关注的默认版块
 - (void)saveFollowDefaultTab:(NSString *)tab {
-    [self.cache setObject:tab
-                   forKey:NJ_SETTING_FOLLOW_DEFAULT_TAB_KEY
-                withBlock:nil];
+    [[NSUserDefaults standardUserDefaults] setObject:tab
+                                              forKey:NJ_SETTING_FOLLOW_DEFAULT_TAB_KEY];
 }
 
 #pragma mark - Private Methods

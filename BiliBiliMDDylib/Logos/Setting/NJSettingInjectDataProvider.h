@@ -18,6 +18,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// 关注的版块数据
 - (NSArray<NJInlineSettingModel *> *)followTabs;
 
+/// 大会员福利可领取类型
+- (NSArray<NJInlineSettingModel *> *)couponTypes;
+
 @end
 
 NS_ASSUME_NONNULL_END

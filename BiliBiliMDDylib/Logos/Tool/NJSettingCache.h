@@ -6,17 +6,29 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "YYCache.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NJSettingCache : NSObject
 
-/// YYCache
-@property (nonatomic, strong) YYCache *cache;
-
 /// 单例
 + (instancetype)sharedInstance;
+
+/// 读取开关设置
+/// - Parameters:
+///   - key: 设置的key
+///   - defaultValue: 没有保存过时的默认值
+- (BOOL)boolForKey:(NSString *)key defaultValue:(BOOL)defaultValue;
+
+/// 保存开关设置
+- (void)saveBool:(BOOL)value forKey:(NSString *)key;
+
+/// 大会员福利（卡券）领取类型
+/// 0：不领取；1：B币券；14：观影券
+- (NSInteger)couponType;
+
+/// 保存大会员福利（卡券）领取类型
+- (void)saveCouponType:(NSInteger)type;
 
 /// 获取默认播放速度
 - (NSString *)defaultPlaybackRate;

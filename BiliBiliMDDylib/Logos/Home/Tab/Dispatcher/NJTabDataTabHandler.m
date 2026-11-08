@@ -42,14 +42,7 @@
 /// 处理数据
 /// - Parameter tabData: 版块数据
 - (NSDictionary *)handleItemData:(NSMutableDictionary *)tabData {
-    NSString *uri = tabData[@"uri"];
-    if (!uri || ![uri isKindOfClass:[NSString class]]) {
-        return tabData;
-    }
-    // 活动版块，比如新征程
-    if ([uri containsString:@"home_activity_tab"]) {
-        return nil;
-    }
+    // 保留全部版块，包括“新征程”等活动版块，避免顶部快捷栏丢失入口
     return tabData;
 }
 

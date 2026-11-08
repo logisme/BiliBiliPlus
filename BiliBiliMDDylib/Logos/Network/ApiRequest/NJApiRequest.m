@@ -27,17 +27,12 @@
 
 /// 执行启动任务
 + (void)runLaunchTasks {
-    // 设置页开关
-    if (!NJ_AUTO_RECEIVE_COUPON_VALUE) {
-        return;
-    }
-    
     // 用户未登录
     if (![NSClassFromString(@"BFCAccount") nj_isLogin]) {
         return;
     }
     
-    // 自动领取大会员福利
+    // 领取手动选择的大会员福利
     [self couponAutoReceiver];
     
     // 领取每日视频分享经验
@@ -51,24 +46,25 @@
     }
 }
 
-/// 自动领取大会员福利
+/// 领取大会员福利（手动选择类型）
 + (void)couponAutoReceiver {
+    // 领取类型：0=不领取
+    NSInteger couponType = NJ_COUPON_TYPE_VALUE;
     // 不是大会员
-    if (![NSClassFromString(@"BFCAccount") nj_isVip]) {
-        return;
-    }
-    
-    // 获取大会员卡券列表
-    if ([[NJDailyTaskManager shared] canRunTask:NJ_LOAD_MY_PRIVILEGE_KEY]) {
-        __weak typeof(self) weakSelf = self;
-        [self loadMyPrivilegeWithCompletionHandler:^(NJMyPrivilegeModel *model) {
-            __strong typeof(weakSelf) strongSelf = weakSelf;
-            NSLog(@"%@:%@-%p-%s-获取大会员卡券列表成功，list count:%ld", nj_logPrefix, NSStringFromClass([(id)self class]), self, __FUNCTION__, [model list].count);
-            [[NJDailyTaskManager shared] markTaskDone:NJ_LOAD_MY_PRIVILEGE_KEY];
-            [strongSelf receiveCouponWithModel:model];
-        } errorHandler:^(NSError *error, NSDictionary *dict) {
-            NSLog(@"%@:%@-%p-%s-获取大会员卡券列表失败，error:%@-dict:%@", nj_logPrefix, NSStringFromClass([(id)self class]), self, __FUNCTION__, error, dict);
-        }];
+    if (couponType != NJ_COUPON_TYPE_NONE &&
+        [NSClassFromString(@"BFCAccount") nj_isVip]) {
+        // 获取大会员卡券列表
+        if ([[NJDailyTaskManager shared] canRunTask:NJ_LOAD_MY_PRIVILEGE_KEY]) {
+            __weak typeof(self) weakSelf = self;
+            [self loadMyPrivilegeWithCompletionHandler:^(NJMyPrivilegeModel *model) {
+                __strong typeof(weakSelf) strongSelf = weakSelf;
+                NSLog(@"%@:%@-%p-%s-获取大会员卡券列表成功，list count:%ld", nj_logPrefix, NSStringFromClass([(id)self class]), self, __FUNCTION__, [model list].count);
+                [[NJDailyTaskManager shared] markTaskDone:NJ_LOAD_MY_PRIVILEGE_KEY];
+                [strongSelf receiveCouponWithModel:model couponType:couponType];
+            } errorHandler:^(NSError *error, NSDictionary *dict) {
+                NSLog(@"%@:%@-%p-%s-获取大会员卡券列表失败，error:%@-dict:%@", nj_logPrefix, NSStringFromClass([(id)self class]), self, __FUNCTION__, error, dict);
+            }];
+        }
     }
     
     
@@ -85,13 +81,15 @@
 
 
 /// 领取优惠券
-/// - Parameter model: 大会员福利 model
-+ (void)receiveCouponWithModel:(NJMyPrivilegeModel *)model {
+/// - Parameters:
+///   - model: 大会员福利 model
+///   - couponType: 手动选择的领取类型
++ (void)receiveCouponWithModel:(NJMyPrivilegeModel *)model
+                     couponType:(NSInteger)couponType {
     NSArray<NJCouponInfo *> *list = model.list;
-    NSArray *couponBlacklist = @[@(8), @(9), @(14), @(20), @(21), @(24), @(25), @(26), @(27)];
     for (NJCouponInfo *info in list) {
-        // 领取优惠券
-        if (![couponBlacklist containsObject:@(info.type)] && info.state == 0 && info.vip_type > 0) {
+        // 只领取用户手动选择的福利类型
+        if (info.type == couponType && info.state == 0 && info.vip_type > 0) {
             [self receiveCouponWithType:info.type completionHandler:^(NSDictionary *dict) {
                 NSLog(@"%@:%@-%p-%s-领取优惠券成功，type:%ld,dict:%@", nj_logPrefix, NSStringFromClass([(id)self class]), self, __FUNCTION__, info.type, dict);
             } errorHandler:^(NSError *error, NSDictionary *dict) {

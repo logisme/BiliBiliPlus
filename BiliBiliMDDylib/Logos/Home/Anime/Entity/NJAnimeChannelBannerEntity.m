@@ -34,8 +34,10 @@
 }
 
 - (NSDictionary *_Nullable)handleBannerData:(NSMutableDictionary *)bannerDic {
-    if ([bannerDic[@"item_type"] isEqualToString:@"focus_img"] &&
-        (!bannerDic[@"season_id"] || !bannerDic[@"season_type"])) {
+    // 只移除广告位（活动页链接），保留频道页顶部的运营海报
+    NSString *url = bannerDic[@"url"];
+    if ([url isKindOfClass:[NSString class]] &&
+        [url hasPrefix:@"https://www.bilibili.com/blackboard/era/"]) {
         return nil;
     }
     return bannerDic;

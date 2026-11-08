@@ -39,10 +39,7 @@
                                                                   on:NJ_UNUSED_SERVICE_VALUE saveKey:NJ_UNUSED_SERVICE_KEY]];
     [datas addObject:[self defaultPlaybackRate]];
     [datas addObject:[self followDefaultTab]];
-    [datas addObject:[[NJSettingSwitchViewModel alloc] initWithBizId:NJ_AUTO_RECEIVE_COUPON_BIZ_ID
-                                                           cellId:NJ_SWITCH_CELL_ID
-                                                            title:@"自动领取大会员福利"
-                                                                  on:NJ_AUTO_RECEIVE_COUPON_VALUE saveKey:NJ_AUTO_RECEIVE_COUPON_KEY]];
+    [datas addObject:[self couponType]];
     [datas addObject:[[NJSettingSwitchViewModel alloc] initWithBizId:NJ_VERTICAL_SCREEN_MODE_BIZ_ID
                                                            cellId:NJ_SWITCH_CELL_ID
                                                             title:@"竖屏模式"
@@ -92,6 +89,42 @@
     [tabs addObject:[[NJInlineSettingModel alloc] initWithTitle:@"全部" bizId:@"all" selected:NO]];
     [tabs addObject:[[NJInlineSettingModel alloc] initWithTitle:@"视频" bizId:@"video" selected:NO]];
     return [tabs copy];
+}
+
+/// 大会员福利领取类型
+- (NJSettingSkullViewModel *)couponType {
+    NJSettingSkullViewModel *model = [[NJSettingSkullViewModel alloc] initWithBizId:NJ_COUPON_TYPE_BIZ_ID
+                                                                             cellId:NJ_ARROW_CELL_ID
+                                                                              title:@"大会员福利"];
+    model.subTitle = [self couponTypeSubTitle];
+    return model;
+}
+
+- (NSString *)couponTypeSubTitle {
+    switch (NJ_COUPON_TYPE_VALUE) {
+        case NJ_COUPON_TYPE_B_COIN:
+            return @"B币券";
+        case NJ_COUPON_TYPE_MOVIE:
+            return @"观影券";
+        default:
+            return @"不领取";
+    }
+}
+
+/// 大会员福利可领取类型
+- (NSArray<NJInlineSettingModel *> *)couponTypes {
+    NSInteger couponType = NJ_COUPON_TYPE_VALUE;
+    NSMutableArray<NJInlineSettingModel *> *types = [NSMutableArray array];
+    [types addObject:[[NJInlineSettingModel alloc] initWithTitle:@"不领取"
+                                                          bizId:[@(NJ_COUPON_TYPE_NONE) stringValue]
+                                                       selected:couponType == NJ_COUPON_TYPE_NONE]];
+    [types addObject:[[NJInlineSettingModel alloc] initWithTitle:@"B币券"
+                                                          bizId:[@(NJ_COUPON_TYPE_B_COIN) stringValue]
+                                                       selected:couponType == NJ_COUPON_TYPE_B_COIN]];
+    [types addObject:[[NJInlineSettingModel alloc] initWithTitle:@"观影券"
+                                                          bizId:[@(NJ_COUPON_TYPE_MOVIE) stringValue]
+                                                       selected:couponType == NJ_COUPON_TYPE_MOVIE]];
+    return [types copy];
 }
 
 /// 版本

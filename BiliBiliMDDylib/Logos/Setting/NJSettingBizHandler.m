@@ -90,6 +90,11 @@
         [self handleFollowDefaultTabWithViewModel:viewModel];
         return;
     }
+    // 大会员福利领取类型
+    if ([bizId isEqualToString:NJ_COUPON_TYPE_BIZ_ID]) {
+        [self handleCouponTypeWithViewModel:viewModel];
+        return;
+    }
 }
 
 #pragma mark - Private Methods
@@ -152,8 +157,31 @@
 - (void)aSwitchChange:(UISwitch *)aSwitch
             viewModel:(NJSettingSwitchViewModel *)viewModel {
     NSString *saveKey = viewModel.saveKey;
-    [NJ_SETTING_CACHE setObject:@(viewModel.on) forKey:saveKey];
+    [[NJSettingCache sharedInstance] saveBool:viewModel.on forKey:saveKey];
     [self rebootTip];
+}
+
+/// 点击大会员福利领取类型
+/// - Parameter viewModel: 数据
+- (void)handleCouponTypeWithViewModel:(NJSettingSkullViewModel *)viewModel {
+    NSArray<NJInlineSettingModel *> *couponTypes = [self.dataProvider couponTypes];
+    NJInlineSettingViewController *inlineVC = [[NJInlineSettingViewController alloc] initWithStyle:UITableViewStylePlain
+                                                                                              title:@"大会员福利"
+                                                                                         dataSource:couponTypes];
+    __weak typeof(self) weakSelf = self;
+    inlineVC.selectedHandler = ^(NJInlineSettingModel * _Nonnull model) {
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        [strongSelf handleChangeCouponType:model viewModel:viewModel];
+    };
+    [self.settingViewController.navigationController pushViewController:inlineVC animated:YES];
+}
+
+- (void)handleChangeCouponType:(NJInlineSettingModel *)model viewModel:(NJSettingSkullViewModel *)viewModel {
+    NSInteger couponType = model.bizId.integerValue;
+    [[NJSettingCache sharedInstance] saveCouponType:couponType];
+    viewModel.subTitle = model.title;
+    [self rebootTip];
+    [self.tableView reloadData];
 }
 
 // 重启提示
