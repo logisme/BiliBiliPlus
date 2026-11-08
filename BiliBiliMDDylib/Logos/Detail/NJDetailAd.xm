@@ -343,6 +343,200 @@
 
 /****************************** 评论标签 ************************************/
 
+#pragma mark - 播放页「UP主推荐」广告
+
+/// 判断字符串是否包含广告 / 电商推广特征
+static BOOL NJStringContainsDetailAdMarker(NSString *value) {
+    if (![value isKindOfClass:[NSString class]] || value.length == 0) {
+        return NO;
+    }
+    NSString *lower = value.lowercaseString;
+    NSArray<NSString *> *markers = @[
+        @"ad_cb", @"ad_type", @"cm_stock", @"is_ad", @"advertiser", @"creative_id",
+        @"cm_info", @"mall.bilibili.com", @"bilibili://mall", @"cm.bilibili.com",
+        @"jd.com", @"3.cn", @"taobao.com", @"tmall.com", @"pinduoduo.com", @"yangkeduo.com"
+    ];
+    for (NSString *marker in markers) {
+        if ([lower containsString:marker]) {
+            return YES;
+        }
+    }
+    return [lower containsString:@"/ad/"] ||
+           [lower containsString:@"?ad="] ||
+           [lower containsString:@"&ad="];
+}
+
+/// 「UP主推荐」广告条目
+static BOOL NJRecommendUperItemIsAd(id item) {
+    if (!item) {
+        return NO;
+    }
+    NSString *className = NSStringFromClass([item class]);
+    if ([className containsString:@"AdRecommend"] ||
+        [className containsString:@"AdUGC"] ||
+        [className containsString:@"Advertising"]) {
+        return YES;
+    }
+    NSArray<NSString *> *keys = @[@"uri", @"param", @"handle", @"title", @"desc"];
+    for (NSString *key in keys) {
+        @try {
+            id value = [item valueForKey:key];
+            if (NJStringContainsDetailAdMarker(value)) {
+                return YES;
+            }
+        } @catch (__unused NSException *exception) {
+        }
+    }
+    return NO;
+}
+
+@interface BBMediaDescRecommendUperModel : NSObject
+
+@property (retain, nonatomic) NSArray *items;
+
+@end
+
+%hook BBMediaDescRecommendUperModel
+
+- (NSArray *)items {
+    NSArray *items = %orig;
+    if (items.count == 0) {
+        return items;
+    }
+    NSMutableArray *filtered = [NSMutableArray array];
+    for (id item in items) {
+        if (NJRecommendUperItemIsAd(item)) {
+            continue;
+        }
+        [filtered addObject:item];
+    }
+    if (filtered.count == items.count) {
+        return items;
+    }
+    [self setItems:filtered];
+    return filtered;
+}
+
+%end
+
+/// 播放页推荐区广告卡片视图：直接从父视图移除
+static void NJRemoveEndPageAdView(UIView *view) {
+    if (![view isKindOfClass:[UIView class]]) {
+        return;
+    }
+    view.hidden = YES;
+    view.userInteractionEnabled = NO;
+    [view removeFromSuperview];
+}
+
+%hook _TtC14BBAdUGCEndPage15AdRecommendView
+
+- (void)didMoveToWindow {
+    %orig;
+    NJRemoveEndPageAdView((UIView *)self);
+}
+
+- (void)layoutSubviews {
+    %orig;
+    if (((UIView *)self).window) {
+        NJRemoveEndPageAdView((UIView *)self);
+    }
+}
+
+%end
+
+%hook _TtC14BBAdUGCEndPage15AdRecommendCard
+
+- (void)layoutSubviews {
+    %orig;
+    if (((UIView *)self).window) {
+        NJRemoveEndPageAdView((UIView *)self);
+    }
+}
+
+%end
+
+%hook _TtC15BBAdVideoDetail25AdUGCEndPageRecommendView
+
+- (void)didMoveToWindow {
+    %orig;
+    NJRemoveEndPageAdView((UIView *)self);
+}
+
+%end
+
+%hook _TtC14BBAdUGCEndPage29AdRecommendFullScreenBaseCard
+
+- (void)didMoveToWindow {
+    %orig;
+    NJRemoveEndPageAdView((UIView *)self);
+}
+
+%end
+
+%hook _TtC14BBAdUGCEndPage29AdRecommendHalfScreenBaseCard
+
+- (void)didMoveToWindow {
+    %orig;
+    NJRemoveEndPageAdView((UIView *)self);
+}
+
+%end
+
+%hook _TtC14BBAdUGCEndPage28AdRecommendFullScreen143Card
+
+- (void)didMoveToWindow {
+    %orig;
+    NJRemoveEndPageAdView((UIView *)self);
+}
+
+%end
+
+%hook _TtC14BBAdUGCEndPage28AdRecommendFullScreen144Card
+
+- (void)didMoveToWindow {
+    %orig;
+    NJRemoveEndPageAdView((UIView *)self);
+}
+
+%end
+
+%hook _TtC14BBAdUGCEndPage28AdRecommendFullScreen145Card
+
+- (void)didMoveToWindow {
+    %orig;
+    NJRemoveEndPageAdView((UIView *)self);
+}
+
+%end
+
+%hook _TtC14BBAdUGCEndPage28AdRecommendHalfScreen143Card
+
+- (void)didMoveToWindow {
+    %orig;
+    NJRemoveEndPageAdView((UIView *)self);
+}
+
+%end
+
+%hook _TtC14BBAdUGCEndPage28AdRecommendHalfScreen144Card
+
+- (void)didMoveToWindow {
+    %orig;
+    NJRemoveEndPageAdView((UIView *)self);
+}
+
+%end
+
+%hook _TtC14BBAdUGCEndPage28AdRecommendHalfScreen145Card
+
+- (void)didMoveToWindow {
+    %orig;
+    NJRemoveEndPageAdView((UIView *)self);
+}
+
+%end
+
 /****************************** 提示 ************************************/
 
 %hook BBPlayerToastContainerWidget
