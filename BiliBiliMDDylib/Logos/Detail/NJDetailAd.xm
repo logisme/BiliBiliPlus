@@ -128,9 +128,13 @@
     }
     NSMutableArray *items = [NSMutableArray array];
     BOOL filtered = NO;
+    Class adObjectClass = NSClassFromString(@"BBMediaUniteRelateADObject");
     for (id item in origVideos) {
-        // 广告卡片对象
-        if ([NSStringFromClass([item class]) isEqualToString:@"BBMediaUniteRelateADObject"]) {
+        NSString *className = NSStringFromClass([item class]);
+        // 广告卡片对象（含 Swift 子类 / 改名后的 AD 对象）
+        if ([className isEqualToString:@"BBMediaUniteRelateADObject"] ||
+            [className containsString:@"RelateAD"] ||
+            (adObjectClass && [item isKindOfClass:adObjectClass])) {
             filtered = YES;
             continue;
         }
@@ -141,6 +145,26 @@
                 filtered = YES;
                 continue;
             }
+        }
+        // 广告投放信息（cm_stock_dto）存在即视为推广
+        @try {
+            id cmStockDto = [item valueForKey:@"cmStockDto"];
+            if (cmStockDto && cmStockDto != [NSNull null]) {
+                filtered = YES;
+                continue;
+            }
+        } @catch (__unused NSException *exception) {
+        }
+        // 后台固定位置广告
+        @try {
+            id basicInfo = [item valueForKey:@"basicInfo"];
+            id from = [basicInfo valueForKey:@"from"];
+            if ([from isKindOfClass:[NSString class]] &&
+                [(NSString *)from isEqualToString:@"operation"]) {
+                filtered = YES;
+                continue;
+            }
+        } @catch (__unused NSException *exception) {
         }
         [items addObject:item];
     }
@@ -529,6 +553,62 @@ static void NJRemoveEndPageAdView(UIView *view) {
 %end
 
 %hook _TtC14BBAdUGCEndPage28AdRecommendHalfScreen145Card
+
+- (void)didMoveToWindow {
+    %orig;
+    NJRemoveEndPageAdView((UIView *)self);
+}
+
+%end
+
+#pragma mark - 播放页「UP主推荐」广告
+
+// 广告推荐会话：直接不返回广告视图，避免「UP主推荐」顶部插入广告卡片
+%hook BBAdRecommendSession
+
+- (UIView *)recommendView {
+    // 返回空视图而不是 nil，避免调用方强制解包崩溃
+    return [[UIView alloc] initWithFrame:CGRectZero];
+}
+
+- (CGFloat)recommendViewHeightWithContainerWidth:(CGFloat)width {
+    return 0.0;
+}
+
+- (BOOL)isSnackbarValid {
+    return NO;
+}
+
+- (void)showSnackbar {
+}
+
+- (void)reportRecommendViewShow {
+}
+
+%end
+
+// 旧版广告推荐视图
+%hook BBAdRecommendBaseView
+
+- (void)didMoveToWindow {
+    %orig;
+    NJRemoveEndPageAdView((UIView *)self);
+}
+
+%end
+
+// 播放页底部「广告」落地页卡片（前往观看按钮）
+%hook _TtC15BBAdVideoDetail20AdUGCLandingPageView
+
+- (void)didMoveToWindow {
+    %orig;
+    NJRemoveEndPageAdView((UIView *)self);
+}
+
+%end
+
+// 相关推荐列表里的广告 Cell 兜底
+%hook BBMediaUniteRelateADCell
 
 - (void)didMoveToWindow {
     %orig;

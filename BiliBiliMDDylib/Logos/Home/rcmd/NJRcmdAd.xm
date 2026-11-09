@@ -420,6 +420,177 @@ static NSArray *NJFilterPegasusAdModels(NSArray *models) {
 
 %end
 
+#pragma mark - 首页 Banner / TopView 广告过滤（9.18 新 BannerV8）
+
+/// 判断 Banner 模型（含 Swift BannerV8Model.Item）是否属于广告
+static BOOL NJAdBannerModelIsAd(id model) {
+    if (!model || model == [NSNull null]) {
+        return NO;
+    }
+    if ([model isKindOfClass:[NSString class]] || [model isKindOfClass:[NSNumber class]]) {
+        return NO;
+    }
+
+    // 新版 BannerV8Model.Item 的静态图片广告嵌套在 static_banner 中
+    @try {
+        id staticBanner = [model valueForKey:@"static_banner"];
+        if (staticBanner && staticBanner != model && staticBanner != [NSNull null]) {
+            if (NJAdBannerModelIsAd(staticBanner)) {
+                return YES;
+            }
+        }
+    } @catch (__unused NSException *exception) {
+    }
+
+    // 广告标记
+    NSArray<NSString *> *flagKeys = @[@"is_ad", @"isAd", @"is_ad_loc", @"isAdLoc",
+                                      @"is_topview", @"isTopview", @"isShowAdTopView",
+                                      @"ad_banner", @"adBanner", @"is_mixin_banner",
+                                      @"isMixinBanner", @"ad_banners", @"adBanners"];
+    for (NSString *key in flagKeys) {
+        @try {
+            id value = [model valueForKey:key];
+            if ([value isKindOfClass:[NSNumber class]] && [value boolValue]) {
+                return YES;
+            }
+            if ([value isKindOfClass:[NSArray class]] && [(NSArray *)value count] > 0) {
+                return YES;
+            }
+            if ([value isKindOfClass:[NSDictionary class]] && [(NSDictionary *)value count] > 0) {
+                return YES;
+            }
+        } @catch (__unused NSException *exception) {
+        }
+    }
+
+    // 广告请求字段
+    NSArray<NSString *> *adKeys = @[@"ad_cb", @"adCb", @"cm_mark", @"cmMark",
+                                    @"splash_id", @"splashId", @"creative_id", @"creativeId"];
+    for (NSString *key in adKeys) {
+        @try {
+            id value = [model valueForKey:key];
+            if ([value isKindOfClass:[NSNumber class]] && [value longLongValue] != 0) {
+                return YES;
+            }
+            if ([value isKindOfClass:[NSString class]]) {
+                NSString *string = (NSString *)value;
+                if (string.length > 0 && ![string isEqualToString:@"0"]) {
+                    return YES;
+                }
+            }
+        } @catch (__unused NSException *exception) {
+        }
+    }
+
+    // 落地页
+    NSArray<NSString *> *linkKeys = @[@"uri", @"ext_link", @"extLink", @"click_url",
+                                      @"clickUrl", @"jump_url", @"jumpUrl"];
+    for (NSString *key in linkKeys) {
+        @try {
+            id value = [model valueForKey:key];
+            if ([value isKindOfClass:[NSString class]] &&
+                NJPegasusStringIsAdLink((NSString *)value)) {
+                return YES;
+            }
+        } @catch (__unused NSException *exception) {
+        }
+    }
+    return NO;
+}
+
+/// 过滤 Banner 数组中的广告
+static NSArray *NJFilterAdBanners(NSArray *models) {
+    if (![models isKindOfClass:[NSArray class]] || models.count == 0) {
+        return models;
+    }
+    NSMutableArray *filtered = [NSMutableArray arrayWithCapacity:models.count];
+    BOOL changed = NO;
+    for (id model in models) {
+        if (NJAdBannerModelIsAd(model)) {
+            changed = YES;
+            continue;
+        }
+        [filtered addObject:model];
+    }
+    return changed ? filtered : models;
+}
+
+// 旧版 Pegasus Banner 模型
+%hook BBHD2PhonePegasusBannerListModel
+
+- (NSArray *)banner_item {
+    NSArray *orig = %orig;
+    return NJFilterAdBanners(orig);
+}
+
+%end
+
+// 9.18 新版首页 Banner（BBPegasusSwift）
+%hook _TtC14BBPegasusSwift13BannerV8Model
+
+- (NSArray *)banner_item {
+    NSArray *orig = %orig;
+    return NJFilterAdBanners(orig);
+}
+
+%end
+
+%hook BBHD2PegasusBannerV8Cell
+
+- (NSArray *)bannerModels {
+    NSArray *orig = %orig;
+    return NJFilterAdBanners(orig);
+}
+
+%end
+
+%hook BBHD2PegasusBannerView
+
+- (NSArray *)bannerModels {
+    NSArray *orig = %orig;
+    return NJFilterAdBanners(orig);
+}
+
+- (BOOL)isShowAdTopView {
+    return NO;
+}
+
+%end
+
+%hook BBHD2PegasusBannerItemCell
+
+- (id)bannerModel {
+    id model = %orig;
+    if (NJAdBannerModelIsAd(model)) {
+        return nil;
+    }
+    return model;
+}
+
+%end
+
+// 信息流里由广告 SDK 直接渲染的卡片（Klook 等应用推广）
+%hook BBAdCardV3CellView
+
+- (CGFloat)heightWithUpdatedData:(id)data {
+    return 0.0;
+}
+
+- (void)updateWithData:(id)data {
+}
+
+- (void)didMoveToSuperview {
+    %orig;
+    ((UIView *)self).hidden = YES;
+}
+
+- (void)didMoveToContainerView {
+    %orig;
+    ((UIView *)self).hidden = YES;
+}
+
+%end
+
 #pragma mark - 首页 Pegasus 卡片模型级广告过滤
 
 @interface BBHD2PhonePegasusMainVM : NSObject

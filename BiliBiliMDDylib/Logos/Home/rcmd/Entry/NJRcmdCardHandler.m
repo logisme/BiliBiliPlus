@@ -107,19 +107,28 @@
     NSString *gotoType = cardData[@"goto"];
     NSString *uri = cardData[@"uri"];
 
-    // 卡片类型/跳转类型为会员购
+    // 卡片类型/跳转类型为商业推广
     if ([cardType containsString:@"mall"] ||
+        [cardType containsString:@"small_cover_v5_ad"] ||
         [cardGoto containsString:@"mall"] ||
         [gotoType isEqualToString:@"ad"] ||
+        [gotoType isEqualToString:@"cm"] ||
+        [gotoType isEqualToString:@"operation"] ||
         [gotoType isEqualToString:@"mall"] ||
-        [cardGoto isEqualToString:@"ad"]) {
+        [cardGoto isEqualToString:@"ad"] ||
+        [cardGoto isEqualToString:@"cm"] ||
+        [cardGoto isEqualToString:@"operation"]) {
         return YES;
     }
 
-    // 广告回调字段（args.ad_cb）只出现在商业推广卡片中
+    // 广告回调字段（args.ad_cb / args.cm_mark）只出现在商业推广卡片中
     id args = cardData[@"args"];
-    if ([args isKindOfClass:[NSDictionary class]] && args[@"ad_cb"]) {
-        return YES;
+    if ([args isKindOfClass:[NSDictionary class]]) {
+        NSDictionary *argsDic = (NSDictionary *)args;
+        if (argsDic[@"ad_cb"] || argsDic[@"cm_mark"] || argsDic[@"cm_stock"] ||
+            argsDic[@"is_ad"] || argsDic[@"ad_info"]) {
+            return YES;
+        }
     }
 
     // 会员购落地页
