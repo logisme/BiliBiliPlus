@@ -73,22 +73,72 @@ static BOOL NJJSONStringIsAdLink(NSString *value) {
     return NO;
 }
 
+/// 递归查找「创作推广 / 商业推广」等推广标签
+static BOOL NJJSONContainsAdLabel(id object, NSInteger depth) {
+    if (!object || depth > 4) {
+        return NO;
+    }
+    if ([object isKindOfClass:[NSString class]]) {
+        NSString *string = (NSString *)object;
+        return [string containsString:@"创作推广"] ||
+               [string containsString:@"商业推广"] ||
+               [string containsString:@"品牌推广"];
+    }
+    if ([object isKindOfClass:[NSArray class]]) {
+        for (id value in (NSArray *)object) {
+            if (NJJSONContainsAdLabel(value, depth + 1)) {
+                return YES;
+            }
+        }
+        return NO;
+    }
+    if ([object isKindOfClass:[NSDictionary class]]) {
+        for (id value in [(NSDictionary *)object allValues]) {
+            if (NJJSONContainsAdLabel(value, depth + 1)) {
+                return YES;
+            }
+        }
+    }
+    return NO;
+}
+
 /// 判断字典是否是广告卡片 / 广告配置
 static BOOL NJJSONDictionaryIsAd(NSDictionary *dict) {
     if (![dict isKindOfClass:[NSDictionary class]] || dict.count == 0) {
         return NO;
     }
-    // 广告标识字段：非空即视为广告
-    NSArray<NSString *> *flagKeys = @[
+    // 明确表示广告的字段：非空即视为广告
+    NSArray<NSString *> *hardFlagKeys = @[
         @"is_ad", @"isAd", @"is_ad_loc", @"isAdLoc", @"has_ad_info", @"hasAdInfo",
-        @"ad_info", @"adInfo", @"cm_info", @"cmInfo", @"ad_cb", @"adCb",
-        @"cm_mark", @"cmMark", @"splash_id", @"splashId", @"nature_ad", @"natureAd",
-        @"small_cover_v5_ad", @"smallCoverV5Ad", @"ad_banner", @"adBanner",
-        @"ad_banners", @"adBanners", @"creative_content", @"creativeContent"
+        @"ad_cb", @"adCb", @"cm_mark", @"cmMark", @"splash_id", @"splashId",
+        @"nature_ad", @"natureAd"
     ];
-    for (NSString *key in flagKeys) {
+    for (NSString *key in hardFlagKeys) {
         if (NJJSONValueIsTruthy(dict[key])) {
             return YES;
+        }
+    }
+
+    // 只有卡片形态的对象才把 ad_info / creative_content 当作整卡广告，
+    // 避免误删带有广告配置字段的 config / options 字典
+    BOOL cardLike = NJJSONValueIsTruthy(dict[@"card_type"]) ||
+                    NJJSONValueIsTruthy(dict[@"cardType"]) ||
+                    NJJSONValueIsTruthy(dict[@"card_goto"]) ||
+                    NJJSONValueIsTruthy(dict[@"cardGoto"]) ||
+                    NJJSONValueIsTruthy(dict[@"goto"]) ||
+                    NJJSONValueIsTruthy(dict[@"cover"]) ||
+                    NJJSONValueIsTruthy(dict[@"banner_item"]) ||
+                    NJJSONValueIsTruthy(dict[@"banner_items"]);
+    if (cardLike) {
+        NSArray<NSString *> *softFlagKeys = @[
+            @"ad_info", @"adInfo", @"cm_info", @"cmInfo",
+            @"small_cover_v5_ad", @"smallCoverV5Ad", @"ad_banner", @"adBanner",
+            @"ad_banners", @"adBanners", @"creative_content", @"creativeContent"
+        ];
+        for (NSString *key in softFlagKeys) {
+            if (NJJSONValueIsTruthy(dict[key])) {
+                return YES;
+            }
         }
     }
 
@@ -122,22 +172,9 @@ static BOOL NJJSONDictionaryIsAd(NSDictionary *dict) {
         }
     }
 
-    // 推广标签（创作推广 / 商业推广等）
-    NSArray<NSString *> *labelKeys = @[@"title", @"subtitle", @"desc", @"reason",
-                                       @"badge", @"rcmd_reason", @"rcmd_reason_style",
-                                       @"cover_left_text_1", @"cover_right_text",
-                                       @"cover_left_text_2", @"right_desc_1"];
-    for (NSString *key in labelKeys) {
-        id value = dict[key];
-        if ([value isKindOfClass:[NSString class]]) {
-            NSString *string = (NSString *)value;
-            if ([string containsString:@"创作推广"] ||
-                [string containsString:@"商业推广"] ||
-                [string containsString:@"品牌推广"] ||
-                [string isEqualToString:@"广告"]) {
-                return YES;
-            }
-        }
+    // 推广标签（创作推广 / 商业推广等），支持嵌套在 rcmd_reason_style 等结构中
+    if (NJJSONContainsAdLabel(dict, 0)) {
+        return YES;
     }
 
     // 落地页
@@ -173,7 +210,9 @@ static id NJJSONSanitizedObject(id object, NSInteger depth) {
                 [lowerKey isEqualToString:@"ad_info"] ||
                 [lowerKey isEqualToString:@"adinfo"] ||
                 [lowerKey isEqualToString:@"cm_info"] ||
-                [lowerKey isEqualToString:@"cminfo"]) {
+                [lowerKey isEqualToString:@"cminfo"] ||
+                [lowerKey isEqualToString:@"creative_content"] ||
+                [lowerKey isEqualToString:@"creativecontent"]) {
                 [dict removeObjectForKey:key];
                 continue;
             }
