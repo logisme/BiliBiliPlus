@@ -617,6 +617,16 @@ static void NJRemoveEndPageAdView(UIView *view) {
 
 %end
 
+// Theseus（KMP）播放页广告卡片兜底
+%hook _TtC18KmpTheseusAdaptionP33_117984360FF61C39472891DECC26E75020TheseusEndPageAdCard
+
+- (void)didMoveToWindow {
+    %orig;
+    NJRemoveEndPageAdView((UIView *)self);
+}
+
+%end
+
 /****************************** 提示 ************************************/
 
 %hook BBPlayerToastContainerWidget
