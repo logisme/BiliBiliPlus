@@ -61,6 +61,42 @@
 
 %end
 
+// 9.18 新版首页（BBPegasusSwift）使用 Swift 原生 URLSession 请求，
+// 不经过 BFCRequest，这里在 completionHandler 层兜底过滤广告数据。
+%hook NSURLSession
+
+- (NSURLSessionDataTask *)dataTaskWithRequest:(NSURLRequest *)request
+                            completionHandler:(void (^)(NSData *data, NSURLResponse *response, NSError *error))completionHandler {
+    if (!completionHandler) {
+        return %orig;
+    }
+    void (^wrappedHandler)(NSData *, NSURLResponse *, NSError *) =
+    ^(NSData *data, NSURLResponse *response, NSError *error) {
+        NSData *filteredData = [[NJApiDataManger sharedInstance] handleWithData:data
+                                                                      response:response
+                                                                         error:error];
+        completionHandler(filteredData, response, error);
+    };
+    return %orig(request, wrappedHandler);
+}
+
+- (NSURLSessionDataTask *)dataTaskWithURL:(NSURL *)url
+                        completionHandler:(void (^)(NSData *data, NSURLResponse *response, NSError *error))completionHandler {
+    if (!completionHandler) {
+        return %orig;
+    }
+    void (^wrappedHandler)(NSData *, NSURLResponse *, NSError *) =
+    ^(NSData *data, NSURLResponse *response, NSError *error) {
+        NSData *filteredData = [[NJApiDataManger sharedInstance] handleWithData:data
+                                                                      response:response
+                                                                         error:error];
+        completionHandler(filteredData, response, error);
+    };
+    return %orig(url, wrappedHandler);
+}
+
+%end
+
 %hook BFCApiOptions
 
 - (NSString *)description {
