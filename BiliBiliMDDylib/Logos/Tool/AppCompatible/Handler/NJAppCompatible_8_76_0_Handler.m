@@ -7,7 +7,7 @@
 
 #import "NJAppCompatible_8_76_0_Handler.h"
 #import "NJCommonDefine.h"
-#import <CydiaSubstrate/CydiaSubstrate.h>
+#import <substrate.h>
 #import "NJChangePlaybackRateTool.h"
 #import "NJPlaybackRateWriteMemoryTool.h"
 #import "NJAppCompatibleDefine.h"

@@ -462,7 +462,6 @@ static BOOL NJAdBannerModelIsAd(id model) {
         } @catch (__unused NSException *exception) {
         }
     }
-
     // 广告请求字段
     NSArray<NSString *> *adKeys = @[@"ad_cb", @"adCb", @"cm_mark", @"cmMark",
                                     @"splash_id", @"splashId", @"creative_id", @"creativeId"];
@@ -565,6 +564,22 @@ static NSArray *NJFilterAdBanners(NSArray *models) {
         return nil;
     }
     return model;
+}
+
+%end
+
+// 9.18 广告 Banner 子项（BBAdPegasus.BannerItemCell）：
+// 数据层如果漏过滤，这里兜底隐藏广告图片，避免轮播中继续展示广告
+%hook _TtC11BBAdPegasus14BannerItemCell
+
+- (void)didMoveToWindow {
+    %orig;
+    ((UIView *)self).hidden = YES;
+}
+
+- (void)layoutSubviews {
+    %orig;
+    ((UIView *)self).hidden = YES;
 }
 
 %end

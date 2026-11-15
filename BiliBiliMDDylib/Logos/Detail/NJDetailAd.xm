@@ -618,11 +618,116 @@ static void NJRemoveEndPageAdView(UIView *view) {
 %end
 
 // Theseus（KMP）播放页广告卡片兜底
+// 注意：TheseusEndPageAdCard 是 NSObject，真正的广告视图由 -view: 返回，
+// 之前 hook didMoveToWindow 不会生效。
 %hook _TtC18KmpTheseusAdaptionP33_117984360FF61C39472891DECC26E75020TheseusEndPageAdCard
+
+- (UIView *)view:(id)arg {
+    UIView *view = %orig;
+    NJRemoveEndPageAdView(view);
+    return view;
+}
+
+- (void)triggerExposure:(id)arg {
+}
+
+- (void)triggerStrictExposure:(id)arg {
+}
+
+- (void)triggerMainExposure:(id)arg {
+}
+
+%end
+
+%hook _TtC18KmpTheseusAdaptionP33_117984360FF61C39472891DECC26E75023TheseusEndPageAdSession
+
+- (BOOL)requestEnabled {
+    return NO;
+}
+
+- (void)animateInsertion {
+}
+
+- (void)animateRemoval {
+}
+
+%end
+
+// HD 版播放页半屏/全屏推荐广告兜底
+%hook _TtC16BBAdHDUGCEndPage12AdHDRcmdView
 
 - (void)didMoveToWindow {
     %orig;
     NJRemoveEndPageAdView((UIView *)self);
+}
+
+- (void)layoutSubviews {
+    %orig;
+    if (((UIView *)self).window) {
+        NJRemoveEndPageAdView((UIView *)self);
+    }
+}
+
+%end
+
+%hook _TtC15BBAdHDUGCBridge22AdHDUGCEndPageRcmdView
+
+- (void)didMoveToWindow {
+    %orig;
+    NJRemoveEndPageAdView((UIView *)self);
+}
+
+%end
+
+#pragma mark - 播放页 Theseus 播放器「UP主推荐」底部弹出广告
+
+// 播放器广告弹层（会在进入播放页 1~2 秒后从底部弹出）
+%hook _TtC18KmpTheseusAdaptionP33_3119E1B82BFCE48E36D458B7A250BCCC18PlayerAdPopperView
+
+- (void)didMoveToWindow {
+    %orig;
+    NJRemoveEndPageAdView((UIView *)self);
+}
+
+- (void)layoutSubviews {
+    %orig;
+    if (((UIView *)self).window) {
+        NJRemoveEndPageAdView((UIView *)self);
+    }
+}
+
+%end
+
+// 弹层的宿主容器，一并隐藏，避免留下空白占位
+%hook _TtC18KmpTheseusAdaptionP33_3119E1B82BFCE48E36D458B7A250BCCC20PlayerAdPopperAnchor
+
+- (void)didMoveToWindow {
+    %orig;
+    NJRemoveEndPageAdView((UIView *)self);
+}
+
+- (void)layoutSubviews {
+    %orig;
+    if (((UIView *)self).window) {
+        NJRemoveEndPageAdView((UIView *)self);
+    }
+}
+
+%end
+
+// 播放器广告会话：高度归零、关闭动画，避免弹层占位
+%hook _TtC18KmpTheseusAdaptionP33_3119E1B82BFCE48E36D458B7A250BCCC22TheseusPlayerAdSession
+
+- (CGFloat)height {
+    return 0.0;
+}
+
+- (BOOL)animationEnabled {
+    return NO;
+}
+
+- (CGFloat)animationDelay {
+    return 0.0;
 }
 
 %end

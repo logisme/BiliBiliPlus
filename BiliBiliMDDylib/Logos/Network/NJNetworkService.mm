@@ -37,7 +37,7 @@
 
 __asm__(".linker_option \"-framework\", \"CydiaSubstrate\"");
 
-@class BFCApiModelDescription; @class BFCApiOptions; @class BFCApiRequestOperation; @class BFCApiRequest; @class BFCRequest; @class NSURLSession; @class BFCAccountHTTPCookie; 
+@class NSURLSession; @class BFCRequest; @class BFCApiModelDescription; @class BFCAccountHTTPCookie; @class BFCApiOptions; @class BFCApiRequest; @class BFCApiRequestOperation; 
 
 
 #line 16 "/Users/luoyunzhan/Bilibil_plus/src/BiliBiliMApp/BiliBiliMDDylib/Logos/Network/NJNetworkService.xm"

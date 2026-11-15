@@ -1,7 +1,7 @@
 
 #import <UIKit/UIKit.h>
 #include <mach-o/dyld.h>
-#import <CydiaSubstrate/CydiaSubstrate.h>
+#import <substrate.h>
 #import <dlfcn.h>
 #import "BBPlayerPlayerRateModel.h"
 #import "NJChangePlaybackRateTool.h"

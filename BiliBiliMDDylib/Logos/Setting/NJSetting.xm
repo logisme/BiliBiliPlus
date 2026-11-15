@@ -2,7 +2,7 @@
 
 #import <UIKit/UIKit.h>
 #import "NJCommonDefine.h"
-#import <objc/objc-runtime.h>
+#import <objc/runtime.h>
 #import "NJSettingSkullTableViewCell.h"
 #import "NJSettingSkullViewModel.h"
 #import "NJSettingSeparatorHeaderView.h"
