@@ -86,7 +86,7 @@
 ### 3. 分发方式
 
 - **不再提供注入后的 IPA**，仅提供编译好的 dylib
-- 仓库内 `Release/libBiliBiliMDDylib.dylib` 为当前版本构建产物
+- 最新构建产物请前往 [Releases](https://github.com/logisme/BiliBiliPlus/releases) 下载
 - 需要自行准备已脱壳的哔哩哔哩 App 进行注入
 
 ---
